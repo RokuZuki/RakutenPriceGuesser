@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check } from 'lucide-react';
+import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -213,7 +213,9 @@ export default function App() {
                     image: images[0] || '', // リザルト画面などで1枚だけ表示する用のフォールバック
                     images: images,
                     url: i.Item.affiliateUrl || i.Item.itemUrl,
-                    tags: cleanTags
+                    tags: cleanTags,
+                    reviewCount: i.Item.reviewCount || 0,
+                    reviewAverage: i.Item.reviewAverage || 0
                 };
             }).filter(i => i.image);
 
@@ -221,11 +223,11 @@ export default function App() {
         } catch (error) {
             console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"] },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"] },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"] },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"] },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"] }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"], reviewCount: 45, reviewAverage: 4.2 },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"], reviewCount: 5600, reviewAverage: 4.6 }
             ];
 
             let items = [];
@@ -603,6 +605,16 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
 
                 <div className="w-full md:w-1/2 flex flex-col gap-4">
                     <h3 className="text-xl md:text-2xl font-bold leading-snug">{currentProduct.name}</h3>
+
+                    {/* レビュー表示 */}
+                    {currentProduct.reviewCount > 0 && (
+                        <div className="flex items-center gap-2 text-yellow-500 font-bold bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200 inline-flex w-max">
+                            <Star className="w-5 h-5 fill-current" />
+                            <span className="text-lg">{currentProduct.reviewAverage}</span>
+                            <span className="text-gray-500 text-sm font-normal">({currentProduct.reviewCount.toLocaleString()}件のレビュー)</span>
+                        </div>
+                    )}
+
                     <p className="text-sm text-gray-500 line-clamp-4 bg-gray-50 p-3 rounded-xl border-2 border-gray-100">{currentProduct.description}</p>
                 </div>
             </div>
@@ -718,6 +730,16 @@ function ResultScreen({ gameState }) {
                                 <img src={prod.image} className="w-20 h-20 object-contain rounded-lg border-2 border-gray-100" />
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm line-clamp-2 leading-tight">{prod.name}</h4>
+
+                                    {/* レビュー表示 (リスト用) */}
+                                    {prod.reviewCount > 0 && (
+                                        <div className="flex items-center gap-1 text-yellow-500 text-xs font-bold mt-1">
+                                            <Star className="w-3 h-3 fill-current" />
+                                            <span>{prod.reviewAverage}</span>
+                                            <span className="text-gray-400 font-normal">({prod.reviewCount.toLocaleString()})</span>
+                                        </div>
+                                    )}
+
                                     <p className="text-red-600 font-black mt-1">¥{prod.price.toLocaleString()}</p>
                                 </div>
                             </div>
