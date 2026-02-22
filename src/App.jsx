@@ -579,4 +579,134 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
             <div className="w-full max-w-2xl bg-white border-4 border-gray-300 rounded-2xl p-6 box-shadow-pop-sm">
                 {me?.hasGuessed ? (
                     <div className="text-center py-6">
-                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-
+                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
+                        <h3 className="text-2xl font-bold text-gray-700">予想完了！</h3>
+                        <p className="text-gray-500 mt-2">
+                            {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
+                        </p>
+                        <div className="mt-4 flex gap-2 justify-center">
+                            {Object.values(gameState.players).map((p, i) => (
+                                <div key={i} className={`w-3 h-3 rounded-full ${p.hasGuessed ? 'bg-green-500' : 'bg-gray-300 animate-bounce'}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
+                            ))}
+                        </div>
+                    </div>
+                ) : (
+                    <form onSubmit={onSubmit} className="flex flex-col gap-4">
+                        <label className="text-center text-xl font-bold text-gray-700">ズバリ、いくら？</label>
+                        <div className="flex items-center gap-3">
+                            <span className="text-4xl font-black text-gray-400">¥</span>
+                            <input
+                                type="number" autoFocus placeholder="1000"
+                                className="flex-1 border-4 border-gray-300 rounded-xl px-4 py-4 text-3xl font-bold focus:border-red-500 focus:outline-none text-right"
+                                value={guessInput} onChange={(e) => setGuessInput(e.target.value)}
+                            />
+                        </div>
+                        <button
+                            type="submit" disabled={!guessInput}
+                            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl text-2xl btn-pop box-shadow-pop-sm disabled:opacity-50 mt-2"
+                        >決定！</button>
+                    </form>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RoundEndScreen({ gameState, myPeerId }) {
+    const currentProduct = gameState.products[gameState.currentRound];
+    const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].lastPoints - a[1].lastPoints);
+
+    return (
+        <div className="mt-8 flex flex-col items-center">
+            <h2 className="text-4xl font-black text-red-500 mb-6 bg-white px-8 py-3 rounded-2xl border-4 border-red-500 box-shadow-pop transform -rotate-1">
+                正解発表
+            </h2>
+
+            <div className="w-full max-w-2xl bg-white border-4 border-red-500 rounded-3xl p-8 box-shadow-pop text-center relative overflow-hidden mb-8">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
+                <img src={currentProduct.image} className="w-32 h-32 object-contain mx-auto mb-4 border-4 border-gray-100 rounded-xl" />
+                <h3 className="text-xl font-bold mb-4 line-clamp-2">{currentProduct.name}</h3>
+                <p className="text-gray-500 font-bold">正解は...</p>
+                <div className="text-6xl font-black text-red-600 my-4">
+                    ¥{currentProduct.price.toLocaleString()}
+                </div>
+            </div>
+
+            <div className="w-full max-w-2xl space-y-3">
+                {sortedPlayers.map(([id, p], index) => {
+                    const diff = p.currentGuess ? Math.abs(p.currentGuess - currentProduct.price) : null;
+                    return (
+                        <div key={id} className={`flex items-center gap-4 bg-white border-4 rounded-2xl p-4 ${id === myPeerId ? 'border-red-500 box-shadow-pop-sm' : 'border-gray-200'}`}>
+                            <div className="w-8 font-black text-gray-400 text-xl">{index + 1}</div>
+                            <div className="flex-1">
+                                <div className="font-bold text-lg">{p.name}</div>
+                                <div className="text-sm text-gray-500">
+                                    予想: {p.hasGuessed ? `¥${p.currentGuess.toLocaleString()}` : '時間切れ'}
+                                    {p.hasGuessed && <span className="ml-2 text-xs">(誤差 ¥{diff.toLocaleString()})</span>}
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="font-black text-2xl text-green-500">+{p.lastPoints} <span className="text-sm">pt</span></div>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+            <p className="mt-8 font-bold text-gray-500 animate-pulse">次のラウンドへ進みます...</p>
+        </div>
+    );
+}
+
+function ResultScreen({ gameState }) {
+    const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
+
+    return (
+        <div className="mt-8 flex flex-col items-center pb-12">
+            <h2 className="text-5xl font-black text-yellow-500 mb-8 flex items-center gap-3 bg-white px-8 py-4 rounded-3xl border-4 border-yellow-400 shadow-[4px_6px_0px_#eab308]">
+                <Trophy className="w-12 h-12" /> 最終結果
+            </h2>
+
+            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12">
+                {sortedPlayers.map(([id, p], index) => (
+                    <div key={id} className={`flex items-center gap-6 bg-white border-4 rounded-2xl p-6 ${index === 0 ? 'border-yellow-400 bg-yellow-50 transform scale-105 shadow-[4px_6px_0px_#eab308] z-10' : 'border-gray-300'}`}>
+                        <div className={`w-12 h-12 flex items-center justify-center rounded-full font-black text-2xl text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-gray-300'}`}>
+                            {index + 1}
+                        </div>
+                        <div className="flex-1 text-2xl font-bold">{p.name}</div>
+                        <div className="text-3xl font-black text-red-500">{p.score} <span className="text-xl">pt</span></div>
+                    </div>
+                ))}
+            </div>
+
+            <div className="w-full max-w-3xl">
+                <h3 className="text-2xl font-black text-gray-700 mb-6 text-center border-b-4 border-dashed border-gray-300 pb-2">登場した商品</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {gameState.products.map((prod, i) => (
+                        <div key={i} className="bg-white border-4 border-gray-200 rounded-2xl p-4 flex flex-col gap-3 hover:border-red-400 transition-colors">
+                            <div className="flex gap-4">
+                                <img src={prod.image} className="w-20 h-20 object-contain rounded-lg border-2 border-gray-100" />
+                                <div className="flex-1">
+                                    <h4 className="font-bold text-sm line-clamp-2 leading-tight">{prod.name}</h4>
+                                    <p className="text-red-600 font-black mt-1">¥{prod.price.toLocaleString()}</p>
+                                </div>
+                            </div>
+                            <a
+                                href={prod.url} target="_blank" rel="noopener noreferrer"
+                                className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold py-2 rounded-lg flex justify-center items-center gap-2 border-2 border-orange-200 transition-colors"
+                            >
+                                <LinkIcon className="w-4 h-4" /> 楽天市場で見る
+                            </a>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            <button
+                onClick={() => window.location.reload()}
+                className="mt-12 bg-gray-800 hover:bg-gray-900 text-white font-bold py-4 px-12 rounded-xl text-xl btn-pop shadow-[0px_4px_0px_#1f2937]"
+            >
+                タイトルへ戻る
+            </button>
+        </div>
+    );
+}
