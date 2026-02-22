@@ -4,6 +4,7 @@ import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCir
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
 const RAKUTEN_AFFILIATE_ID = '512f7071.24021527.512f7072.13b4d1f3';
+const RAKUTEN_ACCESS_KEY = 'pk_cVhHUQ7wfo6evW4nFUckq4kZQKdGbxrn1Ume4NB7YaK';
 
 // --- PeerJS Loader Hook ---
 function usePeerJS() {
@@ -190,7 +191,7 @@ export default function App() {
     // --- Game Logic (Host Only) ---
     const fetchProducts = async (genreId, rounds) => {
         const page = Math.floor(Math.random() * 3) + 1;
-        const url = `https://app.rakuten.co.jp/services/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&page=${page}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+        const url = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${page}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
 
         try {
             const res = await fetch(url);
@@ -210,11 +211,11 @@ export default function App() {
         } catch (error) {
             console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/128x128/ef4444/white?text=Wagyu", url: "#", tags: ["【送料無料】"] },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/128x128/3b82f6/white?text=Earphone", url: "#", tags: ["【ノイズキャンセリング機能付き】"] },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/128x128/10b981/white?text=Matcha", url: "#", tags: ["【ギフト最適】"] },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/128x128/6b7280/white?text=Robot", url: "#", tags: ["【自動ゴミ収集】"] },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/128x128/0ea5e9/white?text=Water", url: "#", tags: ["【まとめ買い】"] }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/128x128/ef4444/white?text=Wagyu", url: "https://www.rakuten.co.jp/", tags: ["【送料無料】"] },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/128x128/3b82f6/white?text=Earphone", url: "https://www.rakuten.co.jp/", tags: ["【ノイズキャンセリング機能付き】"] },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/128x128/10b981/white?text=Matcha", url: "https://www.rakuten.co.jp/", tags: ["【ギフト最適】"] },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/128x128/6b7280/white?text=Robot", url: "https://www.rakuten.co.jp/", tags: ["【自動ゴミ収集】"] },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/128x128/0ea5e9/white?text=Water", url: "https://www.rakuten.co.jp/", tags: ["【まとめ買い】"] }
             ];
 
             let items = [];
