@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2 } from 'lucide-react';
+import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -198,24 +198,30 @@ export default function App() {
             if (!res.ok) throw new Error(`API Error: ${res.status}`);
             const data = await res.json();
 
-            let items = data.Items.map(i => ({
-                name: i.Item.itemName,
-                price: i.Item.itemPrice,
-                description: i.Item.itemCaption,
-                image: i.Item.mediumImageUrls[0]?.imageUrl?.replace('?_ex=128x128', '') || '',
-                url: i.Item.affiliateUrl || i.Item.itemUrl,
-                tags: i.Item.itemName.match(/【.*?】/g) || []
-            })).filter(i => i.image);
+            let items = data.Items.map(i => {
+                // 商品名から【】で囲まれた文字列を抽出し、記号を省いてタグとする
+                const extractedTags = i.Item.itemName.match(/【.*?】/g) || [];
+                const cleanTags = extractedTags.map(tag => tag.replace(/[【】]/g, ''));
+
+                return {
+                    name: i.Item.itemName,
+                    price: i.Item.itemPrice,
+                    description: i.Item.itemCaption,
+                    image: i.Item.mediumImageUrls[0]?.imageUrl?.replace('?_ex=128x128', '') || '',
+                    url: i.Item.affiliateUrl || i.Item.itemUrl,
+                    tags: cleanTags
+                };
+            }).filter(i => i.image);
 
             return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
         } catch (error) {
             console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/128x128/ef4444/white?text=Wagyu", url: "https://www.rakuten.co.jp/", tags: ["【送料無料】"] },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/128x128/3b82f6/white?text=Earphone", url: "https://www.rakuten.co.jp/", tags: ["【ノイズキャンセリング機能付き】"] },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/128x128/10b981/white?text=Matcha", url: "https://www.rakuten.co.jp/", tags: ["【ギフト最適】"] },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/128x128/6b7280/white?text=Robot", url: "https://www.rakuten.co.jp/", tags: ["【自動ゴミ収集】"] },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/128x128/0ea5e9/white?text=Water", url: "https://www.rakuten.co.jp/", tags: ["【まとめ買い】"] }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/128x128/ef4444/white?text=Wagyu", url: "https://www.rakuten.co.jp/", tags: ["送料無料"] },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/128x128/3b82f6/white?text=Earphone", url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"] },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/128x128/10b981/white?text=Matcha", url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"] },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/128x128/6b7280/white?text=Robot", url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"] },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/128x128/0ea5e9/white?text=Water", url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"] }
             ];
 
             let items = [];
@@ -408,6 +414,24 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
 }
 
 function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading }) {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopy = () => {
+        // iframe環境下でも確実にコピーするための処理
+        const textArea = document.createElement("textarea");
+        textArea.value = roomId;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+            document.execCommand('copy');
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Copy failed', err);
+        }
+        document.body.removeChild(textArea);
+    };
+
     return (
         <div className="flex flex-col md:flex-row gap-6 mt-6">
             <div className="flex-1 bg-white border-4 border-red-500 rounded-2xl p-6 box-shadow-pop">
@@ -415,8 +439,17 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                     <h2 className="text-3xl font-black text-red-500 flex items-center gap-2">
                         <Users className="w-8 h-8" /> 参加者
                     </h2>
-                    <div className="bg-red-100 border-2 border-red-500 text-red-700 px-4 py-2 rounded-xl font-bold text-lg tracking-widest">
-                        ID: {roomId}
+                    <div className="flex items-center gap-2">
+                        <div className="bg-red-100 border-2 border-red-500 text-red-700 px-4 py-2 rounded-xl font-bold text-lg tracking-widest">
+                            ID: {roomId}
+                        </div>
+                        <button
+                            onClick={handleCopy}
+                            className={`p-2 rounded-xl border-2 transition-all ${copied ? 'bg-green-500 border-green-700 text-white' : 'bg-red-500 hover:bg-red-600 border-red-700 text-white'}`}
+                            title="ルームIDをコピー"
+                        >
+                            {copied ? <Check className="w-6 h-6" /> : <Copy className="w-6 h-6" />}
+                        </button>
                     </div>
                 </div>
 
@@ -546,134 +579,4 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
             <div className="w-full max-w-2xl bg-white border-4 border-gray-300 rounded-2xl p-6 box-shadow-pop-sm">
                 {me?.hasGuessed ? (
                     <div className="text-center py-6">
-                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h3 className="text-2xl font-bold text-gray-700">予想完了！</h3>
-                        <p className="text-gray-500 mt-2">
-                            {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
-                        </p>
-                        <div className="mt-4 flex gap-2 justify-center">
-                            {Object.values(gameState.players).map((p, i) => (
-                                <div key={i} className={`w-3 h-3 rounded-full ${p.hasGuessed ? 'bg-green-500' : 'bg-gray-300 animate-bounce'}`} style={{ animationDelay: `${i * 0.1}s` }}></div>
-                            ))}
-                        </div>
-                    </div>
-                ) : (
-                    <form onSubmit={onSubmit} className="flex flex-col gap-4">
-                        <label className="text-center text-xl font-bold text-gray-700">ズバリ、いくら？</label>
-                        <div className="flex items-center gap-3">
-                            <span className="text-4xl font-black text-gray-400">¥</span>
-                            <input
-                                type="number" autoFocus placeholder="1000"
-                                className="flex-1 border-4 border-gray-300 rounded-xl px-4 py-4 text-3xl font-bold focus:border-red-500 focus:outline-none text-right"
-                                value={guessInput} onChange={(e) => setGuessInput(e.target.value)}
-                            />
-                        </div>
-                        <button
-                            type="submit" disabled={!guessInput}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl text-2xl btn-pop box-shadow-pop-sm disabled:opacity-50 mt-2"
-                        >決定！</button>
-                    </form>
-                )}
-            </div>
-        </div>
-    );
-}
-
-function RoundEndScreen({ gameState, myPeerId }) {
-    const currentProduct = gameState.products[gameState.currentRound];
-    const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].lastPoints - a[1].lastPoints);
-
-    return (
-        <div className="mt-8 flex flex-col items-center">
-            <h2 className="text-4xl font-black text-red-500 mb-6 bg-white px-8 py-3 rounded-2xl border-4 border-red-500 box-shadow-pop transform -rotate-1">
-                正解発表
-            </h2>
-
-            <div className="w-full max-w-2xl bg-white border-4 border-red-500 rounded-3xl p-8 box-shadow-pop text-center relative overflow-hidden mb-8">
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
-                <img src={currentProduct.image} className="w-32 h-32 object-contain mx-auto mb-4 border-4 border-gray-100 rounded-xl" />
-                <h3 className="text-xl font-bold mb-4 line-clamp-2">{currentProduct.name}</h3>
-                <p className="text-gray-500 font-bold">正解は...</p>
-                <div className="text-6xl font-black text-red-600 my-4">
-                    ¥{currentProduct.price.toLocaleString()}
-                </div>
-            </div>
-
-            <div className="w-full max-w-2xl space-y-3">
-                {sortedPlayers.map(([id, p], index) => {
-                    const diff = p.currentGuess ? Math.abs(p.currentGuess - currentProduct.price) : null;
-                    return (
-                        <div key={id} className={`flex items-center gap-4 bg-white border-4 rounded-2xl p-4 ${id === myPeerId ? 'border-red-500 box-shadow-pop-sm' : 'border-gray-200'}`}>
-                            <div className="w-8 font-black text-gray-400 text-xl">{index + 1}</div>
-                            <div className="flex-1">
-                                <div className="font-bold text-lg">{p.name}</div>
-                                <div className="text-sm text-gray-500">
-                                    予想: {p.hasGuessed ? `¥${p.currentGuess.toLocaleString()}` : '時間切れ'}
-                                    {p.hasGuessed && <span className="ml-2 text-xs">(誤差 ¥{diff.toLocaleString()})</span>}
-                                </div>
-                            </div>
-                            <div className="text-right">
-                                <div className="font-black text-2xl text-green-500">+{p.lastPoints} <span className="text-sm">pt</span></div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-            <p className="mt-8 font-bold text-gray-500 animate-pulse">次のラウンドへ進みます...</p>
-        </div>
-    );
-}
-
-function ResultScreen({ gameState }) {
-    const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
-
-    return (
-        <div className="mt-8 flex flex-col items-center pb-12">
-            <h2 className="text-5xl font-black text-yellow-500 mb-8 flex items-center gap-3 bg-white px-8 py-4 rounded-3xl border-4 border-yellow-400 shadow-[4px_6px_0px_#eab308]">
-                <Trophy className="w-12 h-12" /> 最終結果
-            </h2>
-
-            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12">
-                {sortedPlayers.map(([id, p], index) => (
-                    <div key={id} className={`flex items-center gap-6 bg-white border-4 rounded-2xl p-6 ${index === 0 ? 'border-yellow-400 bg-yellow-50 transform scale-105 shadow-[4px_6px_0px_#eab308] z-10' : 'border-gray-300'}`}>
-                        <div className={`w-12 h-12 flex items-center justify-center rounded-full font-black text-2xl text-white ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-gray-300'}`}>
-                            {index + 1}
-                        </div>
-                        <div className="flex-1 text-2xl font-bold">{p.name}</div>
-                        <div className="text-3xl font-black text-red-500">{p.score} <span className="text-xl">pt</span></div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="w-full max-w-3xl">
-                <h3 className="text-2xl font-black text-gray-700 mb-6 text-center border-b-4 border-dashed border-gray-300 pb-2">登場した商品</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {gameState.products.map((prod, i) => (
-                        <div key={i} className="bg-white border-4 border-gray-200 rounded-2xl p-4 flex flex-col gap-3 hover:border-red-400 transition-colors">
-                            <div className="flex gap-4">
-                                <img src={prod.image} className="w-20 h-20 object-contain rounded-lg border-2 border-gray-100" />
-                                <div className="flex-1">
-                                    <h4 className="font-bold text-sm line-clamp-2 leading-tight">{prod.name}</h4>
-                                    <p className="text-red-600 font-black mt-1">¥{prod.price.toLocaleString()}</p>
-                                </div>
-                            </div>
-                            <a
-                                href={prod.url} target="_blank" rel="noopener noreferrer"
-                                className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-bold py-2 rounded-lg flex justify-center items-center gap-2 border-2 border-orange-200 transition-colors"
-                            >
-                                <LinkIcon className="w-4 h-4" /> 楽天市場で見る
-                            </a>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <button
-                onClick={() => window.location.reload()}
-                className="mt-12 bg-gray-800 hover:bg-gray-900 text-white font-bold py-4 px-12 rounded-xl text-xl btn-pop shadow-[0px_4px_0px_#1f2937]"
-            >
-                タイトルへ戻る
-            </button>
-        </div>
-    );
-}
+                        <CheckCircle2 className="w-16 h-16 text-green-500 mx-
