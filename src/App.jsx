@@ -221,11 +221,11 @@ export default function App() {
         } catch (error) {
             console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/128x128/ef4444/white?text=Wagyu", images: ["https://placehold.co/128x128/ef4444/white?text=Wagyu"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"] },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/128x128/3b82f6/white?text=Earphone", images: ["https://placehold.co/128x128/3b82f6/white?text=Earphone"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"] },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/128x128/10b981/white?text=Matcha", images: ["https://placehold.co/128x128/10b981/white?text=Matcha"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"] },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/128x128/6b7280/white?text=Robot", images: ["https://placehold.co/128x128/6b7280/white?text=Robot"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"] },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/128x128/0ea5e9/white?text=Water", images: ["https://placehold.co/128x128/0ea5e9/white?text=Water"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"] }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"] },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"] },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"] },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"] },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"] }
             ];
 
             let items = [];
@@ -533,10 +533,16 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
 function GameScreen({ gameState, myPeerId, submitGuess }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0); // 選択されている画像のインデックス
 
     const me = gameState.players[myPeerId];
     const currentProduct = gameState.products[gameState.currentRound];
-    const displayImages = currentProduct.images && currentProduct.images.length > 0 ? currentProduct.images : [currentProduct.image];
+    const displayImages = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : [currentProduct?.image];
+
+    // ラウンドが変わるたびに画像インデックスをリセット
+    useEffect(() => {
+        setSelectedImageIndex(0);
+    }, [gameState.currentRound]);
 
     // Local Timer display
     useEffect(() => {
@@ -566,19 +572,35 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
 
             <div className="w-full bg-white border-4 border-red-500 rounded-3xl p-6 box-shadow-pop flex flex-col md:flex-row gap-6 items-center md:items-start mb-6">
                 <div className="w-full md:w-1/2 flex flex-col items-center gap-4">
-                    <div className="flex flex-row justify-center items-end gap-2 w-full">
-                        {displayImages.map((img, i) => (
-                            <div key={i} className={`bg-gray-100 rounded-2xl border-gray-200 flex items-center justify-center overflow-hidden shrink-0 ${i === 0 ? 'w-48 h-48 md:w-64 md:h-64 border-4' : 'w-24 h-24 md:w-32 md:h-32 border-2'}`}>
-                                <img src={img} className="max-w-full max-h-full object-contain" />
-                            </div>
-                        ))}
+
+                    {/* メインの大きい画像 */}
+                    <div className="w-64 h-64 md:w-80 md:h-80 bg-gray-100 rounded-2xl border-4 border-gray-200 flex items-center justify-center overflow-hidden">
+                        <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain transition-opacity duration-300" />
                     </div>
-                    <div className="flex flex-wrap gap-2 justify-center">
+
+                    {/* サムネイル一覧（画像が複数ある場合のみ表示） */}
+                    {displayImages.length > 1 && (
+                        <div className="flex flex-row justify-center items-center gap-3 w-full">
+                            {displayImages.map((img, i) => (
+                                <button
+                                    key={i}
+                                    type="button"
+                                    onClick={() => setSelectedImageIndex(i)}
+                                    className={`w-16 h-16 md:w-20 md:h-20 bg-gray-100 rounded-xl flex items-center justify-center overflow-hidden border-2 transition-all hover:opacity-80 ${selectedImageIndex === i ? 'border-red-500 shadow-[2px_3px_0px_rgba(185,28,28,1)] transform -translate-y-1' : 'border-gray-200'}`}
+                                >
+                                    <img src={img} className="max-w-full max-h-full object-contain" />
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 justify-center mt-2">
                         {currentProduct.tags.map((tag, i) => (
                             <span key={i} className="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-md">{tag}</span>
                         ))}
                     </div>
                 </div>
+
                 <div className="w-full md:w-1/2 flex flex-col gap-4">
                     <h3 className="text-xl md:text-2xl font-bold leading-snug">{currentProduct.name}</h3>
                     <p className="text-sm text-gray-500 line-clamp-4 bg-gray-50 p-3 rounded-xl border-2 border-gray-100">{currentProduct.description}</p>
