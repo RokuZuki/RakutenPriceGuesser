@@ -53,6 +53,11 @@ export default function App() {
     const [gameState, setGameState] = useState(initialGameState);
     const gameStateRef = useRef(initialGameState);
 
+    // 画面遷移時に一番上にスクロールする処理
+    useEffect(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, [gameState.status, currentRoomId]);
+
     // UI Styles & Animations Injection (Gartic Phone Style)
     useEffect(() => {
         const style = document.createElement('style');
@@ -548,9 +553,10 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                 </div>
             </div>
 
-            <div className="panel w-full bg-[#f8fafc] overflow-hidden flex flex-col md:flex-row h-[600px]">
+            {/* スマホレイアウト対応: スマホ時は高さを制限せず全内容を表示させる */}
+            <div className="panel w-full bg-[#f8fafc] overflow-hidden flex flex-col md:flex-row md:h-[600px]">
                 {/* Left: Players */}
-                <div className="w-full md:w-1/3 flex flex-col border-b-4 md:border-b-0 md:border-r-4 border-[#450a0a] bg-white h-[300px] md:h-auto">
+                <div className="w-full md:w-1/3 flex flex-col border-b-4 md:border-b-0 md:border-r-4 border-[#450a0a] bg-white h-[350px] md:h-full">
                     <div className="bg-purple-600 text-white font-black p-4 text-center border-b-4 border-[#450a0a] text-lg text-stroke-sm">
                         プレイヤー {playersEntries.length} / 14
                     </div>
@@ -576,7 +582,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                 </div>
 
                 {/* Right: Settings */}
-                <div className="w-full md:w-2/3 flex flex-col bg-white h-full">
+                <div className="w-full md:w-2/3 flex flex-col bg-white md:h-full">
                     <div className="bg-blue-600 text-white font-black p-4 text-center border-b-4 border-[#450a0a] text-lg text-stroke-sm">
                         ゲーム設定
                     </div>
