@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -240,16 +240,31 @@ export default function App() {
                 setIsLoading(false);
             });
 
+            let isIntentionalClose = false;
+
             conn.on('data', (data) => {
                 if (data.type === 'SYNC') {
                     setGameState(data.state);
                     gameStateRef.current = data.state;
+                } else if (data.type === 'ROOM_CLOSED') {
+                    isIntentionalClose = true;
+                    setError('ホストがルームを解散しました。');
+                    setCurrentRoomId(null);
+                    setGameState(initialGameState);
+                } else if (data.type === 'KICKED') {
+                    isIntentionalClose = true;
+                    setError('ルームから退出させられました。');
+                    setCurrentRoomId(null);
+                    setGameState(initialGameState);
                 }
             });
 
             conn.on('close', () => {
-                setError('ホストとの接続が切断されました（キックされたか、ホストが退出しました）');
-                setCurrentRoomId(null);
+                if (!isIntentionalClose) {
+                    setError('ホストとの通信が切断されました。');
+                    setCurrentRoomId(null);
+                    setGameState(initialGameState);
+                }
             });
         });
 
@@ -263,19 +278,41 @@ export default function App() {
     const handleKickPlayer = (targetPeerId) => {
         if (!isHost || targetPeerId === myPeerIdRef.current) return;
 
-        // コネクションを見つけて閉じる（これにより相手側で conn.on('close') が発動しタイトルに戻される）
         const conn = hostConnectionsRef.current.find(c => c.peer === targetPeerId);
         if (conn) {
-            conn.close();
+            if (conn.open) {
+                conn.send({ type: 'KICKED' });
+                setTimeout(() => conn.close(), 500);
+            }
         }
 
-        // 即座にホストの画面（ステート）からプレイヤーを削除する
         hostConnectionsRef.current = hostConnectionsRef.current.filter(c => c.peer !== targetPeerId);
         updateGameState(prev => {
             const newPlayers = { ...prev.players };
             delete newPlayers[targetPeerId];
             return { ...prev, players: newPlayers };
         });
+    };
+
+    const handleLeaveRoom = () => {
+        if (isHost) {
+            hostConnectionsRef.current.forEach(conn => {
+                if (conn.open) conn.send({ type: 'ROOM_CLOSED' });
+            });
+        }
+
+        setTimeout(() => {
+            if (peerRef.current) {
+                peerRef.current.destroy();
+                peerRef.current = null;
+            }
+            hostConnectionsRef.current = [];
+            connRef.current = null;
+            setCurrentRoomId(null);
+            setGameState(initialGameState);
+            setIsHost(false);
+            setError('');
+        }, 100);
     };
 
     const fetchProducts = async (genreId, rounds, keyword) => {
@@ -444,13 +481,14 @@ export default function App() {
                             }}
                             isLoading={isLoading}
                             handleKickPlayer={handleKickPlayer}
+                            handleLeaveRoom={handleLeaveRoom}
                         />
                     ) : gameState.status === 'playing' ? (
-                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} />
+                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} />
                     ) : gameState.status === 'roundEnd' ? (
-                        <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} />
+                        <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} handleLeaveRoom={handleLeaveRoom} />
                     ) : gameState.status === 'result' ? (
-                        <ResultScreen gameState={gameState} />
+                        <ResultScreen gameState={gameState} handleLeaveRoom={handleLeaveRoom} />
                     ) : null}
                 </div>
             </div>
@@ -534,7 +572,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     );
 }
 
-function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer }) {
+function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer, handleLeaveRoom }) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -561,15 +599,18 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                 <h2 className="text-4xl md:text-5xl font-black text-white text-stroke flex items-center gap-3 tracking-widest">
                     <Settings className="w-10 h-10 md:w-12 md:h-12" /> LOBBY
                 </h2>
-                <div className="bg-white panel-border px-6 py-2 rounded-2xl flex items-center gap-4 shadow-[0_4px_0_#450a0a]">
-                    <span className="font-black text-2xl text-[#450a0a]">ID: <span className="tracking-widest">{roomId}</span></span>
-                    <button
-                        onClick={handleCopy}
-                        className={`p-2 rounded-xl panel-border transition-colors ${copied ? 'bg-green-500 text-white' : 'bg-yellow-300 hover:bg-yellow-400 text-[#450a0a]'}`}
-                        title="ルームIDをコピー"
-                    >
-                        {copied ? <Check strokeWidth={3} /> : <Copy strokeWidth={3} />}
-                    </button>
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+                    <LeaveButton onLeave={handleLeaveRoom} />
+                    <div className="bg-white panel-border px-6 py-2 rounded-2xl flex items-center gap-4 shadow-[0_4px_0_#450a0a]">
+                        <span className="font-black text-2xl text-[#450a0a]">ID: <span className="tracking-widest">{roomId}</span></span>
+                        <button
+                            onClick={handleCopy}
+                            className={`p-2 rounded-xl panel-border transition-colors ${copied ? 'bg-green-500 text-white' : 'bg-yellow-300 hover:bg-yellow-400 text-[#450a0a]'}`}
+                            title="ルームIDをコピー"
+                        >
+                            {copied ? <Check strokeWidth={3} /> : <Copy strokeWidth={3} />}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -689,7 +730,7 @@ function SettingRow({ icon, title, desc, children }) {
     );
 }
 
-function GameScreen({ gameState, myPeerId, submitGuess }) {
+function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -757,12 +798,15 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
     return (
         <div className="w-full mt-4 flex flex-col items-center animate-fadeIn">
             {/* Header */}
-            <div className="w-full flex justify-between items-center mb-6 px-2 animate-float">
+            <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
                 <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a]">
                     ラウンド <span className="text-red-600 text-3xl mx-1">{gameState.currentRound + 1}</span> / {gameState.settings.rounds}
                 </div>
-                <div className={`panel-border font-black text-3xl flex items-center gap-2 bg-white px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse text-red-600' : 'text-[#450a0a]'}`}>
-                    <Clock className="w-8 h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+                    <LeaveButton onLeave={handleLeaveRoom} />
+                    <div className={`panel-border font-black text-3xl flex items-center gap-2 bg-white px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse text-red-600' : 'text-[#450a0a]'}`}>
+                        <Clock className="w-8 h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
+                    </div>
                 </div>
             </div>
 
@@ -847,12 +891,15 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
     )
 }
 
-function RoundEndScreen({ gameState, myPeerId }) {
+function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     const currentProduct = gameState.products[gameState.currentRound];
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].lastPoints - a[1].lastPoints);
 
     return (
-        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn">
+        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative">
+            <div className="w-full flex justify-end px-2 mb-4 md:-mb-8 z-20">
+                <LeaveButton onLeave={handleLeaveRoom} />
+            </div>
             <div className="animate-float z-10 -mb-6">
                 <h2 className="text-5xl md:text-6xl font-black text-white text-stroke transform -rotate-2 tracking-widest">
                     正解発表！
@@ -896,7 +943,7 @@ function RoundEndScreen({ gameState, myPeerId }) {
     );
 }
 
-function ResultScreen({ gameState }) {
+function ResultScreen({ gameState, handleLeaveRoom }) {
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
 
     return (
@@ -953,11 +1000,43 @@ function ResultScreen({ gameState }) {
             </div>
 
             <button
-                onClick={() => window.location.reload()}
+                onClick={handleLeaveRoom}
                 className="mt-12 bg-[#450a0a] hover:bg-[#270606] text-white font-black py-4 px-16 rounded-2xl text-2xl btn-solid shadow-[0_6px_0_#000]"
             >
                 タイトルへ戻る
             </button>
         </div>
+    );
+}
+
+function LeaveButton({ onLeave }) {
+    const [confirming, setConfirming] = useState(false);
+
+    useEffect(() => {
+        if (confirming) {
+            // 3秒経過したら自動的に確認状態を解除する
+            const timer = setTimeout(() => setConfirming(false), 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [confirming]);
+
+    if (confirming) {
+        return (
+            <button
+                onClick={onLeave}
+                className="bg-red-600 hover:bg-red-700 text-white font-black px-4 py-2 rounded-xl panel-border shadow-[0_4px_0_#450a0a] flex items-center gap-2 animate-pulse-pop shrink-0"
+            >
+                <LogOut size={20} strokeWidth={3} /> 退出する！
+            </button>
+        );
+    }
+
+    return (
+        <button
+            onClick={() => setConfirming(true)}
+            className="bg-gray-200 hover:bg-gray-300 text-[#450a0a] font-black px-4 py-2 rounded-xl panel-border shadow-[0_4px_0_#450a0a] flex items-center gap-2 transition-colors shrink-0"
+        >
+            <LogOut size={20} strokeWidth={3} /> 退出
+        </button>
     );
 }
