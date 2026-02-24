@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -33,6 +33,7 @@ export default function App() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isHost, setIsHost] = useState(false);
+    const [productFetchError, setProductFetchError] = useState(false); // APIエラー表示用ステート
 
     // P2P States & Refs
     const peerRef = useRef(null);
@@ -163,6 +164,7 @@ export default function App() {
     const handleCreateRoom = () => {
         if (!playerName.trim()) return setError('名前を入力してください');
         setIsLoading(true);
+        setProductFetchError(false);
 
         const newRoomId = Math.random().toString(36).substring(2, 7).toUpperCase();
         const fullPeerId = `RKTN-${newRoomId}`;
@@ -312,87 +314,108 @@ export default function App() {
             setGameState(initialGameState);
             setIsHost(false);
             setError('');
+            setProductFetchError(false);
         }, 100);
     };
 
+    // モックデータの生成
+    const getMockProducts = (rounds) => {
+        const fallbackProducts = [
+            { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+            { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+            { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
+        ];
+        let items = [];
+        for (let i = 0; i < rounds; i++) items.push(fallbackProducts[i % fallbackProducts.length]);
+        return items.sort(() => 0.5 - Math.random());
+    };
+
+    // APIからの商品フェッチ
     const fetchProducts = async (genreId, rounds, keyword) => {
-        try {
-            let rawItems = [];
+        let rawItems = [];
 
-            if (keyword && keyword.trim() !== '') {
-                const urlPage1 = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
-                const res1 = await fetch(urlPage1);
-                if (!res1.ok) throw new Error(`API Error: ${res1.status}`);
-                const data1 = await res1.json();
+        if (keyword && keyword.trim() !== '') {
+            const urlPage1 = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
+            const res1 = await fetch(urlPage1);
+            if (!res1.ok) throw new Error(`API Error: ${res1.status}`);
+            const data1 = await res1.json();
 
-                if (!data1.Items || data1.Items.length === 0) throw new Error("商品が見つかりませんでした");
+            if (!data1.Items || data1.Items.length === 0) throw new Error("商品が見つかりませんでした");
 
-                const maxPage = Math.min(10, data1.pageCount || 1);
-                let targetData = data1;
+            const maxPage = Math.min(10, data1.pageCount || 1);
+            let targetData = data1;
 
-                if (maxPage > 1) {
-                    const randomSearchPage = Math.floor(Math.random() * maxPage) + 1;
-                    if (randomSearchPage !== 1) {
-                        const urlRandom = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomSearchPage}`;
-                        const resRandom = await fetch(urlRandom);
-                        if (resRandom.ok) {
-                            const dataRandom = await resRandom.json();
-                            if (dataRandom.Items && dataRandom.Items.length > 0) targetData = dataRandom;
-                        }
+            if (maxPage > 1) {
+                const randomSearchPage = Math.floor(Math.random() * maxPage) + 1;
+                if (randomSearchPage !== 1) {
+                    const urlRandom = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomSearchPage}`;
+                    const resRandom = await fetch(urlRandom);
+                    if (resRandom.ok) {
+                        const dataRandom = await resRandom.json();
+                        if (dataRandom.Items && dataRandom.Items.length > 0) targetData = dataRandom;
                     }
                 }
-                rawItems = targetData.Items;
-            } else {
-                const randomRankPage = Math.floor(Math.random() * 30) + 1;
-                const urlRank = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomRankPage}`;
+            }
+            rawItems = targetData.Items;
+        } else {
+            const randomRankPage = Math.floor(Math.random() * 30) + 1;
+            const urlRank = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomRankPage}`;
 
-                let res = await fetch(urlRank);
-                let data = res.ok ? await res.json() : null;
+            let res = await fetch(urlRank);
+            let data = res.ok ? await res.json() : null;
 
-                if (!data || !data.Items || data.Items.length === 0) {
-                    const urlFallback = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
-                    res = await fetch(urlFallback);
-                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
-                    data = await res.json();
-                }
-
-                if (!data.Items || data.Items.length === 0) throw new Error("商品が見つかりませんでした");
-                rawItems = data.Items;
+            if (!data || !data.Items || data.Items.length === 0) {
+                const urlFallback = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
+                res = await fetch(urlFallback);
+                if (!res.ok) throw new Error(`API Error: ${res.status}`);
+                data = await res.json();
             }
 
-            let items = rawItems.map(i => {
-                const extractedTags = i.Item.itemName.match(/【.*?】/g) || [];
-                const cleanTags = extractedTags.map(tag => tag.replace(/[【】]/g, ''));
-                if (i.Item.shopName) cleanTags.unshift(i.Item.shopName);
-
-                const images = i.Item.mediumImageUrls?.slice(0, 3).map(img => img.imageUrl?.replace('?_ex=128x128', '')).filter(Boolean) || [];
-
-                return {
-                    name: i.Item.itemName,
-                    price: i.Item.itemPrice,
-                    description: i.Item.itemCaption || '商品説明はありません。',
-                    image: images[0] || 'https://placehold.co/400x400/gray/white?text=No+Image',
-                    images: images,
-                    url: i.Item.affiliateUrl || i.Item.itemUrl,
-                    tags: cleanTags,
-                    reviewCount: i.Item.reviewCount || 0,
-                    reviewAverage: i.Item.reviewAverage || 0
-                };
-            }).filter(i => i.image && i.price > 0);
-
-            if (items.length < rounds) throw new Error("商品数が足りません");
-            return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
-        } catch (error) {
-            console.warn("楽天APIの呼び出しに失敗、または商品がないため、テスト用モックデータを使用します。", error);
-            const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
-            ];
-            let items = [];
-            for (let i = 0; i < rounds; i++) items.push(fallbackProducts[i % fallbackProducts.length]);
-            return items.sort(() => 0.5 - Math.random());
+            if (!data.Items || data.Items.length === 0) throw new Error("商品が見つかりませんでした");
+            rawItems = data.Items;
         }
+
+        let items = rawItems.map(i => {
+            const extractedTags = i.Item.itemName.match(/【.*?】/g) || [];
+            const cleanTags = extractedTags.map(tag => tag.replace(/[【】]/g, ''));
+            if (i.Item.shopName) cleanTags.unshift(i.Item.shopName);
+
+            const images = i.Item.mediumImageUrls?.slice(0, 3).map(img => img.imageUrl?.replace('?_ex=128x128', '')).filter(Boolean) || [];
+
+            return {
+                name: i.Item.itemName,
+                price: i.Item.itemPrice,
+                description: i.Item.itemCaption || '商品説明はありません。',
+                image: images[0] || 'https://placehold.co/400x400/gray/white?text=No+Image',
+                images: images,
+                url: i.Item.affiliateUrl || i.Item.itemUrl,
+                tags: cleanTags,
+                reviewCount: i.Item.reviewCount || 0,
+                reviewAverage: i.Item.reviewAverage || 0
+            };
+        }).filter(i => i.image && i.price > 0);
+
+        if (items.length < rounds) throw new Error("商品数が足りません");
+        return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
+    };
+
+    // ゲーム開始処理（モック使用フラグつき）
+    const handleStartGame = async (useMock = false) => {
+        setIsLoading(true);
+        setProductFetchError(false);
+        try {
+            let products;
+            if (useMock) {
+                products = getMockProducts(gameState.settings.rounds);
+            } else {
+                products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds, gameState.settings.keyword);
+            }
+            updateGameState({ status: 'playing', products, currentRound: 0, roundEndTime: gameState.settings.timeLimit === 0 ? 0 : Date.now() + (gameState.settings.timeLimit * 1000) + 2000 });
+        } catch (error) {
+            console.error("API呼び出し失敗:", error);
+            setProductFetchError(true);
+        }
+        setIsLoading(false);
     };
 
     useEffect(() => {
@@ -471,17 +494,11 @@ export default function App() {
                         <LobbyScreen
                             gameState={gameState} isHost={isHost} roomId={currentRoomId} myPeerId={myPeerIdRef.current}
                             updateSetting={(k, v) => updateGameState(prev => ({ ...prev, settings: { ...prev.settings, [k]: v } }))}
-                            startGame={async () => {
-                                setIsLoading(true);
-                                try {
-                                    const products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds, gameState.settings.keyword);
-                                    updateGameState({ status: 'playing', products, currentRound: 0, roundEndTime: gameState.settings.timeLimit === 0 ? 0 : Date.now() + (gameState.settings.timeLimit * 1000) + 2000 });
-                                } catch (e) { alert("商品の取得に失敗しました"); }
-                                setIsLoading(false);
-                            }}
+                            startGame={handleStartGame}
                             isLoading={isLoading}
                             handleKickPlayer={handleKickPlayer}
                             handleLeaveRoom={handleLeaveRoom}
+                            productFetchError={productFetchError}
                         />
                     ) : gameState.status === 'playing' ? (
                         <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} />
@@ -572,7 +589,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     );
 }
 
-function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer, handleLeaveRoom }) {
+function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer, handleLeaveRoom, productFetchError }) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -700,9 +717,23 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                     <div className="p-4 bg-gray-200 border-t-4 border-[#450a0a] flex items-center justify-end gap-4">
                         {!isHost && <div className="text-[#450a0a] font-black mr-auto flex items-center gap-2 animate-pulse-pop"><Loader2 className="animate-spin" /> ホストの開始を待機中...</div>}
                         {isHost && (
-                            <button onClick={startGame} disabled={isLoading || Object.keys(gameState.players).length < 1} className="w-full md:w-auto bg-green-500 text-white font-black text-2xl py-3 px-12 rounded-xl btn-solid flex items-center justify-center gap-2">
-                                {isLoading ? <Loader2 className="animate-spin w-8 h-8" /> : <><Play className="fill-current w-8 h-8" /> 開始</>}
-                            </button>
+                            productFetchError ? (
+                                <div className="flex flex-col md:flex-row gap-3 items-center w-full animate-fadeIn bg-red-100 p-3 rounded-xl panel-border border-red-400">
+                                    <span className="text-red-700 font-black text-sm md:text-base flex items-center gap-1 shrink-0"><AlertTriangle className="w-5 h-5" /> 商品取得に失敗</span>
+                                    <div className="flex gap-2 w-full md:ml-auto">
+                                        <button onClick={() => startGame(false)} disabled={isLoading} className="flex-1 md:flex-none bg-blue-500 hover:bg-blue-400 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm">
+                                            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : <><RefreshCw className="w-4 h-4" />再試行</>}
+                                        </button>
+                                        <button onClick={() => startGame(true)} disabled={isLoading} className="flex-1 md:flex-none bg-gray-600 hover:bg-gray-500 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                            <Play className="w-4 h-4 fill-current" /> モックで開始
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : (
+                                <button onClick={() => startGame(false)} disabled={isLoading || Object.keys(gameState.players).length < 1} className="w-full md:w-auto bg-green-500 text-white font-black text-2xl py-3 px-12 rounded-xl btn-solid flex items-center justify-center gap-2">
+                                    {isLoading ? <Loader2 className="animate-spin w-8 h-8" /> : <><Play className="fill-current w-8 h-8" /> 開始</>}
+                                </button>
+                            )
                         )}
                     </div>
                 </div>
