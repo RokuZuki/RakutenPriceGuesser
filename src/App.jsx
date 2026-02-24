@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -248,7 +248,7 @@ export default function App() {
             });
 
             conn.on('close', () => {
-                setError('ホストとの接続が切断されました');
+                setError('ホストとの接続が切断されました（キックされたか、ホストが退出しました）');
                 setCurrentRoomId(null);
             });
         });
@@ -256,6 +256,25 @@ export default function App() {
         peer.on('error', (err) => {
             setError('入室に失敗しました: ' + err.type);
             setIsLoading(false);
+        });
+    };
+
+    // 参加者をキックする関数
+    const handleKickPlayer = (targetPeerId) => {
+        if (!isHost || targetPeerId === myPeerIdRef.current) return;
+
+        // コネクションを見つけて閉じる（これにより相手側で conn.on('close') が発動しタイトルに戻される）
+        const conn = hostConnectionsRef.current.find(c => c.peer === targetPeerId);
+        if (conn) {
+            conn.close();
+        }
+
+        // 即座にホストの画面（ステート）からプレイヤーを削除する
+        hostConnectionsRef.current = hostConnectionsRef.current.filter(c => c.peer !== targetPeerId);
+        updateGameState(prev => {
+            const newPlayers = { ...prev.players };
+            delete newPlayers[targetPeerId];
+            return { ...prev, players: newPlayers };
         });
     };
 
@@ -387,7 +406,7 @@ export default function App() {
 
     const submitGuess = (guessValue) => {
         const val = parseInt(guessValue, 10);
-        if (isNaN(val)) return;
+        if (isNaN(val) || val < 0) return; // 0未満のマイナス値は除外
         if (isHost) {
             updateGameState(prev => ({
                 ...prev, players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], currentGuess: val, hasGuessed: true } }
@@ -424,6 +443,7 @@ export default function App() {
                                 setIsLoading(false);
                             }}
                             isLoading={isLoading}
+                            handleKickPlayer={handleKickPlayer}
                         />
                     ) : gameState.status === 'playing' ? (
                         <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} />
@@ -470,7 +490,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
 
                 <div className="p-8 flex flex-col md:flex-row gap-8 items-center bg-[#f8fafc]">
                     <div className="w-32 h-32 rounded-full bg-yellow-300 panel-border flex items-center justify-center animate-pulse-pop shadow-[0_6px_0_#450a0a] shrink-0">
-                        <Users className="w-16 h-16 text-[#450a0a]" />
+                        <User className="w-16 h-16 text-[#450a0a]" />
                     </div>
 
                     <div className="flex-1 space-y-6 w-full">
@@ -514,7 +534,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     );
 }
 
-function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading }) {
+function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer }) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -568,12 +588,23 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                                 </div>
                                 <span className="font-black text-lg flex-1 truncate text-[#450a0a]">{p.name}</span>
                                 {p.isHost && <Crown className="text-yellow-500 w-8 h-8 mr-2 fill-current" />}
+
+                                {/* ホストのみ他のプレイヤーをキックできるボタンを表示 */}
+                                {!p.isHost && isHost && (
+                                    <button
+                                        onClick={() => handleKickPlayer(id)}
+                                        className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-xl panel-border mr-2 transition-transform hover:scale-110 active:scale-95"
+                                        title="このプレイヤーを退出させる"
+                                    >
+                                        <X strokeWidth={3} size={20} />
+                                    </button>
+                                )}
                             </div>
                         ))}
                         {emptySlots.map((_, i) => (
                             <div key={`empty-${i}`} className="bg-gray-100 rounded-2xl p-2 flex items-center gap-3 panel-border opacity-60">
                                 <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center panel-border">
-                                    <Users className="w-6 h-6 text-gray-500" />
+                                    <User className="w-6 h-6 text-gray-500" />
                                 </div>
                                 <span className="font-black text-lg text-gray-400 flex-1">空</span>
                             </div>
@@ -662,6 +693,7 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const inputRef = useRef(null); // 入力欄への参照を追加
 
     const me = gameState.players[myPeerId];
     const currentProduct = gameState.products[gameState.currentRound];
@@ -680,6 +712,40 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
         }, 200);
         return () => clearInterval(interval);
     }, [gameState.roundEndTime, isUnlimited]);
+
+    // マウスホイールでの金額調整と、ページスクロール防止処理
+    useEffect(() => {
+        const handleWheel = (e) => {
+            // ページ全体のスクロールを止める
+            e.preventDefault();
+
+            // スクロール方向を取得 (下スクロール: 1, 上スクロール: -1)
+            const delta = Math.sign(e.deltaY);
+
+            setGuessInput(prev => {
+                let currentVal = parseInt(prev, 10);
+                if (isNaN(currentVal)) currentVal = 0;
+
+                // 遊びやすいように100円単位で増減させる
+                let newVal = currentVal - (delta * 100);
+                if (newVal < 0) newVal = 0;
+
+                return newVal.toString();
+            });
+        };
+
+        const input = inputRef.current;
+        if (input) {
+            // passive: false にすることで e.preventDefault() が確実に効くようにする
+            input.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
+        return () => {
+            if (input) {
+                input.removeEventListener('wheel', handleWheel);
+            }
+        };
+    }, []);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -755,9 +821,18 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
                             <div className="flex items-center gap-3 flex-1 w-full bg-white rounded-2xl panel-border px-4 py-2 shadow-[inset_0_4px_0_rgba(0,0,0,0.1)]">
                                 <span className="text-4xl font-black text-red-500">¥</span>
                                 <input
+                                    ref={inputRef}
                                     type="number" autoFocus placeholder="ズバリ、いくら？"
+                                    min="0"
                                     className="flex-1 w-full bg-transparent text-3xl md:text-4xl font-black text-[#450a0a] focus:outline-none text-right py-2 placeholder-gray-300"
-                                    value={guessInput} onChange={(e) => setGuessInput(e.target.value)}
+                                    value={guessInput}
+                                    onChange={(e) => {
+                                        const val = e.target.value;
+                                        // 空文字、または0以上の数字のみ入力を許可する
+                                        if (val === '' || Number(val) >= 0) {
+                                            setGuessInput(val);
+                                        }
+                                    }}
                                 />
                             </div>
                             <button
