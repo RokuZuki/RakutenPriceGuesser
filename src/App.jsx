@@ -26,6 +26,15 @@ function usePeerJS() {
 export default function App() {
     const peerReady = usePeerJS();
 
+    // --- AdSense Integration ---
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5871148617904389";
+        script.async = true;
+        script.crossOrigin = "anonymous";
+        document.head.appendChild(script);
+    }, []);
+
     // App States
     const [playerName, setPlayerName] = useState('');
     const [roomIdInput, setRoomIdInput] = useState('');
