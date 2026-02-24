@@ -43,7 +43,7 @@ export default function App() {
     // Game State (Host owns this, Guests receive it)
     const initialGameState = {
         status: 'lobby', // lobby, playing, roundEnd, result
-        settings: { genreId: '0', timeLimit: 30, rounds: 3 },
+        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '' },
         currentRound: 0,
         products: [],
         players: {}, // { peerId: { name, score, currentGuess, hasGuessed, isHost } }
@@ -205,45 +205,106 @@ export default function App() {
     };
 
     // --- Game Logic (Host Only) ---
-    const fetchProducts = async (genreId, rounds) => {
-        const page = Math.floor(Math.random() * 3) + 1;
-        const url = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${page}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
-
+    const fetchProducts = async (genreId, rounds, keyword) => {
         try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`API Error: ${res.status}`);
-            const data = await res.json();
+            let rawItems = [];
 
-            let items = data.Items.map(i => {
+            if (keyword && keyword.trim() !== '') {
+                // --- 1. キーワード検索（商品検索API）の場合 ---
+                // まず1ページ目を取得して、全体のページ数（pageCount）を確認する
+                const urlPage1 = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&keyword=${encodeURIComponent(keyword)}&page=1${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                const res1 = await fetch(urlPage1);
+                if (!res1.ok) throw new Error(`API Error: ${res1.status}`);
+                const data1 = await res1.json();
+
+                if (!data1.Items || data1.Items.length === 0) {
+                    throw new Error("商品が見つかりませんでした");
+                }
+
+                // APIが教えてくれる全ページ数（pageCount）をもとに、最大10ページまでの範囲でランダムに選ぶ
+                const maxPage = Math.min(10, data1.pageCount || 1);
+                let targetData = data1;
+
+                if (maxPage > 1) {
+                    const randomSearchPage = Math.floor(Math.random() * maxPage) + 1;
+                    if (randomSearchPage !== 1) {
+                        // 選ばれたランダムなページが1以外なら、そのページを再取得
+                        const urlRandom = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&keyword=${encodeURIComponent(keyword)}&page=${randomSearchPage}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                        const resRandom = await fetch(urlRandom);
+                        if (resRandom.ok) {
+                            const dataRandom = await resRandom.json();
+                            if (dataRandom.Items && dataRandom.Items.length > 0) {
+                                targetData = dataRandom; // ランダムページの商品データで上書き
+                            }
+                        }
+                    }
+                }
+                rawItems = targetData.Items;
+
+            } else {
+                // --- 2. ランキング検索（ランキングAPI）の場合 ---
+                // 1〜30ページの中からランダムに選ぶ
+                const randomRankPage = Math.floor(Math.random() * 30) + 1;
+                const urlRank = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomRankPage}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+
+                let res = await fetch(urlRank);
+                let data = res.ok ? await res.json() : null;
+
+                // もし指定したページに商品がない（ジャンルによっては30ページも無い）場合は、確実に存在する「1ページ目」でやり直す
+                if (!data || !data.Items || data.Items.length === 0) {
+                    const urlFallback = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                    res = await fetch(urlFallback);
+                    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+                    data = await res.json();
+                }
+
+                if (!data.Items || data.Items.length === 0) {
+                    throw new Error("商品が見つかりませんでした");
+                }
+                rawItems = data.Items;
+            }
+
+            // 取得した生データをゲーム用に整形
+            let items = rawItems.map(i => {
                 // 商品名から【】で囲まれた文字列を抽出し、記号を省いてタグとする
                 const extractedTags = i.Item.itemName.match(/【.*?】/g) || [];
                 const cleanTags = extractedTags.map(tag => tag.replace(/[【】]/g, ''));
 
+                // ショップ名をタグの先頭に追加
+                if (i.Item.shopName) {
+                    cleanTags.unshift(i.Item.shopName);
+                }
+
                 // 最大3枚までの画像URLを取得
-                const images = i.Item.mediumImageUrls.slice(0, 3).map(img => img.imageUrl?.replace('?_ex=128x128', '')).filter(Boolean);
+                const images = i.Item.mediumImageUrls?.slice(0, 3).map(img => img.imageUrl?.replace('?_ex=128x128', '')).filter(Boolean) || [];
 
                 return {
                     name: i.Item.itemName,
                     price: i.Item.itemPrice,
-                    description: i.Item.itemCaption,
-                    image: images[0] || '', // リザルト画面などで1枚だけ表示する用のフォールバック
+                    description: i.Item.itemCaption || '商品説明はありません。',
+                    image: images[0] || 'https://placehold.co/400x400/gray/white?text=No+Image',
                     images: images,
                     url: i.Item.affiliateUrl || i.Item.itemUrl,
                     tags: cleanTags,
                     reviewCount: i.Item.reviewCount || 0,
                     reviewAverage: i.Item.reviewAverage || 0
                 };
-            }).filter(i => i.image);
+            }).filter(i => i.image && i.price > 0);
+
+            // 指定されたラウンド数に足りない場合はエラーを投げてフォールバックさせる
+            if (items.length < rounds) {
+                throw new Error("商品数が足りません");
+            }
 
             return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
         } catch (error) {
-            console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
+            console.warn("楽天APIの呼び出しに失敗、または商品がないため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付きなので、ゴミ捨ての手間が省けます。マッピング機能で部屋の間取りを正確に把握し、効率的に清掃します。段差乗り越えや落下防止センサーも搭載。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"], reviewCount: 45, reviewAverage: 4.2 },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。スッキリとした口当たりで、毎日の水分補給にぴったりです。料理やお茶、コーヒーなどにも最適です。非常時の備蓄用としてもおすすめ。重い荷物も玄関までお届けします。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"], reviewCount: 5600, reviewAverage: 4.6 }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付きなので、ゴミ捨ての手間が省けます。マッピング機能で部屋の間取りを正確に把握し、効率的に清掃します。段差乗り越えや落下防止センサーも搭載。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["スマートライフ", "自動ゴミ収集"], reviewCount: 45, reviewAverage: 4.2 },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。スッキリとした口当たりで、毎日の水分補給にぴったりです。料理やお茶、コーヒーなどにも最適です。非常時の備蓄用としてもおすすめ。重い荷物も玄関までお届けします。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["ドリンク問屋", "まとめ買い"], reviewCount: 5600, reviewAverage: 4.6 }
             ];
 
             let items = [];
@@ -355,7 +416,7 @@ export default function App() {
                         startGame={async () => {
                             setIsLoading(true);
                             try {
-                                const products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds);
+                                const products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds, gameState.settings.keyword);
                                 updateGameState({
                                     status: 'playing',
                                     products,
@@ -515,6 +576,19 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                             <option value="200162">本・雑誌・コミック</option>
                         </select>
                     </div>
+
+                    <div>
+                        <label className="block text-gray-700 font-bold mb-2 text-sm">フリーワード絞り込み <span className="text-xs text-blue-500 font-normal bg-blue-100 px-2 py-1 rounded">オプション</span></label>
+                        <input
+                            type="text"
+                            disabled={!isHost}
+                            placeholder="例: キャンプ, ガジェット, クリスマス"
+                            className="w-full border-4 border-gray-300 rounded-xl px-4 py-3 text-lg focus:border-blue-500 transition-colors placeholder-gray-400"
+                            value={gameState.settings.keyword || ''}
+                            onChange={(e) => updateSetting('keyword', e.target.value)}
+                        />
+                    </div>
+
                     <div>
                         <label className="block text-gray-700 font-bold mb-2">ラウンド数</label>
                         <div className="flex gap-2">
