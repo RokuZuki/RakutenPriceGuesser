@@ -62,6 +62,22 @@ export default function App() {
       .box-shadow-pop { box-shadow: 4px 6px 0px rgba(185, 28, 28, 1); }
       .box-shadow-pop-sm { box-shadow: 2px 3px 0px rgba(185, 28, 28, 1); }
       .btn-pop:active { transform: translateY(4px); box-shadow: none !important; }
+      
+      /* スクロールバーのカスタマイズ */
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f1f5f9; 
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1; 
+        border-radius: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8; 
+      }
     `;
         document.head.appendChild(style);
         return () => document.head.removeChild(style);
@@ -223,11 +239,11 @@ export default function App() {
         } catch (error) {
             console.warn("楽天APIの呼び出しに失敗したため、テスト用モックデータを使用します。", error);
             const fallbackProducts = [
-                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
-                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
-                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 },
-                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付き。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"], reviewCount: 45, reviewAverage: 4.2 },
-                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"], reviewCount: 5600, reviewAverage: 4.6 }
+                { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+                { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+                { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 },
+                { name: "【自動ゴミ収集】ロボット掃除機 スマホ連動", price: 45000, description: "スマホアプリ連携で簡単お掃除。自動ゴミ収集機能付きなので、ゴミ捨ての手間が省けます。マッピング機能で部屋の間取りを正確に把握し、効率的に清掃します。段差乗り越えや落下防止センサーも搭載。", image: "https://placehold.co/400x400/6b7280/white?text=Robot+1", images: ["https://placehold.co/400x400/6b7280/white?text=Robot+1", "https://placehold.co/400x400/6b7280/white?text=Robot+2", "https://placehold.co/400x400/6b7280/white?text=Robot+3"], url: "https://www.rakuten.co.jp/", tags: ["自動ゴミ収集"], reviewCount: 45, reviewAverage: 4.2 },
+                { name: "【まとめ買い】天然水 ミネラルウォーター 500ml×24本", price: 1980, description: "大自然で育まれた美味しい天然水。スッキリとした口当たりで、毎日の水分補給にぴったりです。料理やお茶、コーヒーなどにも最適です。非常時の備蓄用としてもおすすめ。重い荷物も玄関までお届けします。", image: "https://placehold.co/400x400/0ea5e9/white?text=Water+1", images: ["https://placehold.co/400x400/0ea5e9/white?text=Water+1", "https://placehold.co/400x400/0ea5e9/white?text=Water+2", "https://placehold.co/400x400/0ea5e9/white?text=Water+3"], url: "https://www.rakuten.co.jp/", tags: ["まとめ買い"], reviewCount: 5600, reviewAverage: 4.6 }
             ];
 
             let items = [];
@@ -246,11 +262,13 @@ export default function App() {
             const state = gameStateRef.current;
 
             if (state.status === 'playing') {
-                const remaining = state.roundEndTime - Date.now();
+                const isUnlimited = state.settings.timeLimit === 0;
+                const remaining = isUnlimited ? 1 : state.roundEndTime - Date.now();
                 const playersArr = Object.values(state.players);
                 const allGuessed = playersArr.length > 0 && playersArr.every(p => p.hasGuessed);
+                const isTimeUp = !isUnlimited && remaining <= 0;
 
-                if (remaining <= 0 || allGuessed) {
+                if (isTimeUp || allGuessed) {
                     const currentProduct = state.products[state.currentRound];
                     const newPlayers = { ...state.players };
 
@@ -285,7 +303,7 @@ export default function App() {
                         updateGameState({
                             status: 'playing',
                             currentRound: state.currentRound + 1,
-                            roundEndTime: Date.now() + (state.settings.timeLimit * 1000) + 2000,
+                            roundEndTime: state.settings.timeLimit === 0 ? 0 : Date.now() + (state.settings.timeLimit * 1000) + 2000,
                             players: resetPlayers
                         });
                     }
@@ -342,7 +360,7 @@ export default function App() {
                                     status: 'playing',
                                     products,
                                     currentRound: 0,
-                                    roundEndTime: Date.now() + (gameState.settings.timeLimit * 1000) + 2000
+                                    roundEndTime: gameState.settings.timeLimit === 0 ? 0 : Date.now() + (gameState.settings.timeLimit * 1000) + 2000
                                 });
                             } catch (e) { alert("商品の取得に失敗しました"); }
                             setIsLoading(false);
@@ -423,7 +441,6 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
-        // iframe環境下でも確実にコピーするための処理
         const textArea = document.createElement("textarea");
         textArea.value = roomId;
         document.body.appendChild(textArea);
@@ -489,14 +506,19 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                             <option value="0">すべてのジャンル</option>
                             <option value="100227">食品・スイーツ</option>
                             <option value="100371">レディースファッション</option>
+                            <option value="551177">メンズファッション</option>
+                            <option value="100939">美容・コスメ・香水</option>
+                            <option value="100804">インテリア・寝具・収納</option>
                             <option value="562637">家電</option>
-                            <option value="101240">CD・DVD</option>
+                            <option value="101070">スポーツ・アウトドア</option>
+                            <option value="101164">おもちゃ・ゲーム</option>
+                            <option value="200162">本・雑誌・コミック</option>
                         </select>
                     </div>
                     <div>
                         <label className="block text-gray-700 font-bold mb-2">ラウンド数</label>
                         <div className="flex gap-2">
-                            {[3, 5, 10].map(r => (
+                            {[3, 4, 5].map(r => (
                                 <button key={r} disabled={!isHost} onClick={() => updateSetting('rounds', r)}
                                     className={`flex-1 py-2 rounded-xl border-4 font-bold text-lg transition-colors ${gameState.settings.rounds === r ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-300 text-gray-500'}`}
                                 >{r}回</button>
@@ -505,11 +527,11 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                     </div>
                     <div>
                         <label className="block text-gray-700 font-bold mb-2">制限時間</label>
-                        <div className="flex gap-2">
-                            {[15, 30, 60].map(t => (
+                        <div className="grid grid-cols-4 gap-2">
+                            {[15, 30, 60, 0].map(t => (
                                 <button key={t} disabled={!isHost} onClick={() => updateSetting('timeLimit', t)}
-                                    className={`flex-1 py-2 rounded-xl border-4 font-bold text-lg transition-colors ${gameState.settings.timeLimit === t ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-300 text-gray-500'}`}
-                                >{t}秒</button>
+                                    className={`py-2 rounded-xl border-4 font-bold text-sm md:text-lg transition-colors ${gameState.settings.timeLimit === t ? 'bg-blue-500 border-blue-500 text-white' : 'bg-white border-gray-300 text-gray-500'}`}
+                                >{t === 0 ? '無制限' : `${t}秒`}</button>
                             ))}
                         </div>
                     </div>
@@ -535,24 +557,25 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
 function GameScreen({ gameState, myPeerId, submitGuess }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
-    const [selectedImageIndex, setSelectedImageIndex] = useState(0); // 選択されている画像のインデックス
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
     const me = gameState.players[myPeerId];
     const currentProduct = gameState.products[gameState.currentRound];
     const displayImages = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : [currentProduct?.image];
+    const isUnlimited = gameState.settings.timeLimit === 0;
 
-    // ラウンドが変わるたびに画像インデックスをリセット
     useEffect(() => {
         setSelectedImageIndex(0);
     }, [gameState.currentRound]);
 
     // Local Timer display
     useEffect(() => {
+        if (isUnlimited) return;
         const interval = setInterval(() => {
             setTimeLeft(Math.max(0, Math.ceil((gameState.roundEndTime - Date.now()) / 1000)));
         }, 200);
         return () => clearInterval(interval);
-    }, [gameState.roundEndTime]);
+    }, [gameState.roundEndTime, isUnlimited]);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -567,20 +590,18 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
                 <div className="bg-red-500 text-white font-black text-xl px-4 py-2 rounded-xl border-4 border-red-700 box-shadow-pop-sm">
                     Round {gameState.currentRound + 1} <span className="text-red-200 text-sm">/ {gameState.settings.rounds}</span>
                 </div>
-                <div className={`font-black text-3xl flex items-center gap-2 ${timeLeft <= 5 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
-                    <Clock className="w-8 h-8" /> {timeLeft}秒
+                <div className={`font-black text-3xl flex items-center gap-2 ${!isUnlimited && timeLeft <= 5 ? 'text-red-600 animate-pulse' : 'text-gray-700'}`}>
+                    <Clock className="w-8 h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
                 </div>
             </div>
 
             <div className="w-full bg-white border-4 border-red-500 rounded-3xl p-6 box-shadow-pop flex flex-col md:flex-row gap-6 items-center md:items-start mb-6">
                 <div className="w-full md:w-1/2 flex flex-col items-center gap-4">
 
-                    {/* メインの大きい画像 */}
                     <div className="w-64 h-64 md:w-80 md:h-80 bg-gray-100 rounded-2xl border-4 border-gray-200 flex items-center justify-center overflow-hidden">
                         <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain transition-opacity duration-300" />
                     </div>
 
-                    {/* サムネイル一覧（画像が複数ある場合のみ表示） */}
                     {displayImages.length > 1 && (
                         <div className="flex flex-row justify-center items-center gap-3 w-full">
                             {displayImages.map((img, i) => (
@@ -606,7 +627,6 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
                 <div className="w-full md:w-1/2 flex flex-col gap-4">
                     <h3 className="text-xl md:text-2xl font-bold leading-snug">{currentProduct.name}</h3>
 
-                    {/* レビュー表示 */}
                     {currentProduct.reviewCount > 0 && (
                         <div className="flex items-center gap-2 text-yellow-500 font-bold bg-yellow-50 px-3 py-2 rounded-lg border border-yellow-200 inline-flex w-max">
                             <Star className="w-5 h-5 fill-current" />
@@ -615,7 +635,10 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
                         </div>
                     )}
 
-                    <p className="text-sm text-gray-500 line-clamp-4 bg-gray-50 p-3 rounded-xl border-2 border-gray-100">{currentProduct.description}</p>
+                    {/* 説明文をスクロール可能に */}
+                    <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-xl border-2 border-gray-100 max-h-48 overflow-y-auto whitespace-pre-wrap leading-relaxed custom-scrollbar">
+                        {currentProduct.description}
+                    </div>
                 </div>
             </div>
 
@@ -636,17 +659,18 @@ function GameScreen({ gameState, myPeerId, submitGuess }) {
                 ) : (
                     <form onSubmit={onSubmit} className="flex flex-col gap-4">
                         <label className="text-center text-xl font-bold text-gray-700">ズバリ、いくら？</label>
-                        <div className="flex items-center gap-3">
-                            <span className="text-4xl font-black text-gray-400">¥</span>
+                        <div className="flex items-center gap-2 md:gap-3 w-full">
+                            {/* スマホで横幅がはみ出さないように shrink-0 と min-w-0 を追加 */}
+                            <span className="text-3xl md:text-4xl font-black text-gray-400 shrink-0">¥</span>
                             <input
                                 type="number" autoFocus placeholder="1000"
-                                className="flex-1 border-4 border-gray-300 rounded-xl px-4 py-4 text-3xl font-bold focus:border-red-500 focus:outline-none text-right"
+                                className="flex-1 min-w-0 border-4 border-gray-300 rounded-xl px-3 py-3 md:px-4 md:py-4 text-2xl md:text-3xl font-bold focus:border-red-500 focus:outline-none text-right"
                                 value={guessInput} onChange={(e) => setGuessInput(e.target.value)}
                             />
                         </div>
                         <button
                             type="submit" disabled={!guessInput}
-                            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-4 rounded-xl text-2xl btn-pop box-shadow-pop-sm disabled:opacity-50 mt-2"
+                            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-3 md:py-4 rounded-xl text-xl md:text-2xl btn-pop box-shadow-pop-sm disabled:opacity-50 mt-2"
                         >決定！</button>
                     </form>
                 )}
@@ -731,7 +755,6 @@ function ResultScreen({ gameState }) {
                                 <div className="flex-1">
                                     <h4 className="font-bold text-sm line-clamp-2 leading-tight">{prod.name}</h4>
 
-                                    {/* レビュー表示 (リスト用) */}
                                     {prod.reviewCount > 0 && (
                                         <div className="flex items-center gap-1 text-yellow-500 text-xs font-bold mt-1">
                                             <Star className="w-3 h-3 fill-current" />
