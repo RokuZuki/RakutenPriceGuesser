@@ -283,7 +283,7 @@ export default function App() {
             let rawItems = [];
 
             if (keyword && keyword.trim() !== '') {
-                const urlPage1 = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&keyword=${encodeURIComponent(keyword)}&page=1${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                const urlPage1 = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
                 const res1 = await fetch(urlPage1);
                 if (!res1.ok) throw new Error(`API Error: ${res1.status}`);
                 const data1 = await res1.json();
@@ -296,7 +296,7 @@ export default function App() {
                 if (maxPage > 1) {
                     const randomSearchPage = Math.floor(Math.random() * maxPage) + 1;
                     if (randomSearchPage !== 1) {
-                        const urlRandom = `https://app.rakuten.co.jp/services/api/IchibaItem/Search/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&keyword=${encodeURIComponent(keyword)}&page=${randomSearchPage}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                        const urlRandom = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomSearchPage}`;
                         const resRandom = await fetch(urlRandom);
                         if (resRandom.ok) {
                             const dataRandom = await resRandom.json();
@@ -307,13 +307,13 @@ export default function App() {
                 rawItems = targetData.Items;
             } else {
                 const randomRankPage = Math.floor(Math.random() * 30) + 1;
-                const urlRank = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomRankPage}${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                const urlRank = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomRankPage}`;
 
                 let res = await fetch(urlRank);
                 let data = res.ok ? await res.json() : null;
 
                 if (!data || !data.Items || data.Items.length === 0) {
-                    const urlFallback = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&applicationId=${RAKUTEN_APP_ID}&affiliateId=${RAKUTEN_AFFILIATE_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1${genreId !== '0' ? `&genreId=${genreId}` : ''}`;
+                    const urlFallback = `https://openapi.rakuten.co.jp/ichibaranking/api/IchibaItem/Ranking/20220601?format=json&affiliateId=${RAKUTEN_AFFILIATE_ID}${genreId !== '0' ? `&genreId=${genreId}` : ''}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
                     res = await fetch(urlFallback);
                     if (!res.ok) throw new Error(`API Error: ${res.status}`);
                     data = await res.json();
