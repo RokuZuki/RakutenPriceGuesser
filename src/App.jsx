@@ -52,6 +52,7 @@ export default function App() {
     const [keepResultScreen, setKeepResultScreen] = useState(false);
     const keepResultScreenRef = useRef(false);
     const [hostDisconnected, setHostDisconnected] = useState(false);
+    const [resultData, setResultData] = useState(null);
 
     useEffect(() => {
         keepResultScreenRef.current = keepResultScreen;
@@ -81,10 +82,12 @@ export default function App() {
         // リザルト画面に入ったら画面を保護する。次のゲームが始まったら保護を解除する。
         if (gameState.status === 'result') {
             setKeepResultScreen(true);
+            setResultData(prev => prev || gameState);
         } else if (gameState.status === 'playing') {
             setKeepResultScreen(false);
+            setResultData(null);
         }
-    }, [gameState.status]);
+    }, [gameState.status, gameState]);
 
     // 実際に画面に描画するステータス（保護中はサーバーがlobbyになってもresultを維持）
     let displayStatus = gameState.status;
@@ -461,11 +464,13 @@ export default function App() {
             setActiveEmotes([]);
             setHostDisconnected(false);
             setKeepResultScreen(false);
+            setResultData(null);
         }, 100);
     };
 
     const handleReturnToLobby = () => {
         setKeepResultScreen(false);
+        setResultData(null);
         if (isHost) {
             const resetPlayers = {};
             Object.keys(gameState.players).forEach(id => {
@@ -749,7 +754,7 @@ export default function App() {
                     ) : displayStatus === 'roundEnd' ? (
                         <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} handleLeaveRoom={handleLeaveRoom} />
                     ) : displayStatus === 'result' ? (
-                        <ResultScreen gameState={gameState} handleLeaveRoom={handleLeaveRoom} handleReturnToLobby={handleReturnToLobby} hostDisconnected={hostDisconnected} />
+                        <ResultScreen gameState={resultData || gameState} handleLeaveRoom={handleLeaveRoom} handleReturnToLobby={handleReturnToLobby} hostDisconnected={hostDisconnected} />
                     ) : null}
                 </div>
             </div>
