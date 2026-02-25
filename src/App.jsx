@@ -882,7 +882,8 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const inputRef = useRef(null); // 入力欄への参照を追加
+    const [showDoubleAnim, setShowDoubleAnim] = useState(false); // 2倍演出用ステート
+    const inputRef = useRef(null);
 
     const me = gameState.players[myPeerId];
     const currentProduct = gameState.products[gameState.currentRound];
@@ -893,7 +894,14 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     useEffect(() => {
         setSelectedImageIndex(0);
         setGuessInput('');
-    }, [gameState.currentRound]);
+
+        // 最終ラウンド開始時にアニメーションを表示
+        if (isFinalRound && gameState.settings.doubleFinalRound) {
+            setShowDoubleAnim(true);
+            const timer = setTimeout(() => setShowDoubleAnim(false), 3000); // 3秒で消す
+            return () => clearTimeout(timer);
+        }
+    }, [gameState.currentRound, isFinalRound, gameState.settings.doubleFinalRound]);
 
     useEffect(() => {
         if (isUnlimited) return;
@@ -936,7 +944,21 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     if (!currentProduct) return null;
 
     return (
-        <div className="w-full mt-4 flex flex-col items-center animate-fadeIn">
+        <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative">
+            {/* 最終ラウンド 2倍演出オーバーレイ */}
+            {showDoubleAnim && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/60 animate-fadeIn">
+                    <div className="bg-yellow-400 border-8 border-red-600 rounded-3xl p-8 md:p-12 transform -rotate-6 animate-pulse-pop shadow-[0_15px_0_#991b1b]">
+                        <h2 className="text-4xl md:text-6xl font-black text-red-600 text-center text-stroke-sm leading-tight">
+                            最終ラウンド！<br />
+                            <span className="text-6xl md:text-8xl text-white text-stroke block mt-4 transform rotate-3">
+                                ポイント2倍!!
+                            </span>
+                        </h2>
+                    </div>
+                </div>
+            )}
+
             {/* Header */}
             <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
                 <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] flex items-center">
@@ -1043,8 +1065,8 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
             </div>
             <div className="animate-float z-10 -mb-6 flex flex-col items-center">
                 {gameState.settings.doubleFinalRound && isFinalRound && (
-                    <div className="bg-yellow-400 text-red-700 font-black text-xl px-4 py-1 rounded-full border-4 border-red-700 mb-2 transform rotate-2 animate-pulse-pop">
-                        ポイント2倍獲得!!
+                    <div className="bg-yellow-400 text-red-700 font-black text-2xl md:text-4xl px-8 py-2 rounded-full border-4 border-red-700 mb-4 transform rotate-2 animate-pulse-pop shadow-[0_4px_0_#b91c1c]">
+                        🔥 最終ラウンド ポイント2倍!! 🔥
                     </div>
                 )}
                 <h2 className="text-5xl md:text-6xl font-black text-white text-stroke transform -rotate-2 tracking-widest">
