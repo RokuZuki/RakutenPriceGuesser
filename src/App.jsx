@@ -47,6 +47,16 @@ export default function App() {
     // Emote State
     const [activeEmotes, setActiveEmotes] = useState([]);
 
+    // --- Result Screen Keep States ---
+    // リザルト画面でホストがロビーやタイトルに戻っても、ゲストの画面を維持するためのステート群
+    const [keepResultScreen, setKeepResultScreen] = useState(false);
+    const keepResultScreenRef = useRef(false);
+    const [hostDisconnected, setHostDisconnected] = useState(false);
+
+    useEffect(() => {
+        keepResultScreenRef.current = keepResultScreen;
+    }, [keepResultScreen]);
+
     // P2P States & Refs
     const peerRef = useRef(null);
     const connRef = useRef(null);
@@ -66,15 +76,35 @@ export default function App() {
     const [gameState, setGameState] = useState(initialGameState);
     const gameStateRef = useRef(initialGameState);
 
+    // --- State Sync for Keep Result ---
+    useEffect(() => {
+        // リザルト画面に入ったら画面を保護する。次のゲームが始まったら保護を解除する。
+        if (gameState.status === 'result') {
+            setKeepResultScreen(true);
+        } else if (gameState.status === 'playing') {
+            setKeepResultScreen(false);
+        }
+    }, [gameState.status]);
+
+    // 実際に画面に描画するステータス（保護中はサーバーがlobbyになってもresultを維持）
+    let displayStatus = gameState.status;
+    if (gameState.status === 'result' || gameState.status === 'lobby') {
+        if (hostDisconnected) {
+            displayStatus = 'result';
+        } else {
+            displayStatus = keepResultScreen ? 'result' : 'lobby';
+        }
+    }
+
     // 画面遷移時に一番上にスクロールする処理 ＋ URLハッシュによる擬似ページ分割
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
         let targetHash = '#title';
         if (currentRoomId) {
-            if (gameState.status === 'lobby') targetHash = '#lobby';
-            else if (gameState.status === 'playing' || gameState.status === 'roundEnd') targetHash = '#battle';
-            else if (gameState.status === 'result') targetHash = '#result';
+            if (displayStatus === 'lobby') targetHash = '#lobby';
+            else if (displayStatus === 'playing' || displayStatus === 'roundEnd') targetHash = '#battle';
+            else if (displayStatus === 'result') targetHash = '#result';
         }
 
         const currentHash = window.location.hash || '#title';
@@ -90,7 +120,7 @@ export default function App() {
                 window.location.hash = targetHash;
             }
         }
-    }, [gameState.status, currentRoomId]);
+    }, [displayStatus, currentRoomId]);
 
     // ブラウザの「戻る」「進む」ボタンに対する安全対策
     useEffect(() => {
@@ -357,14 +387,20 @@ export default function App() {
                     gameStateRef.current = data.state;
                 } else if (data.type === 'ROOM_CLOSED') {
                     isIntentionalClose = true;
-                    setError('ホストがルームを解散しました。');
-                    setCurrentRoomId(null);
-                    setGameState(initialGameState);
+                    // リザルト画面で商品を見ている最中の場合は、いきなりタイトルに戻さず保護する
+                    if (keepResultScreenRef.current) {
+                        setHostDisconnected(true);
+                    } else {
+                        setError('ホストがルームを解散しました。');
+                        setCurrentRoomId(null);
+                        setGameState(initialGameState);
+                    }
                 } else if (data.type === 'KICKED') {
                     isIntentionalClose = true;
                     setError('ルームから退出させられました。');
                     setCurrentRoomId(null);
                     setGameState(initialGameState);
+                    setKeepResultScreen(false);
                 } else if (data.type === 'EMOTE') {
                     addEmoteToScreen(data.senderId, data.emoji);
                 }
@@ -372,9 +408,13 @@ export default function App() {
 
             conn.on('close', () => {
                 if (!isIntentionalClose) {
-                    setError('ホストとの通信が切断されました。');
-                    setCurrentRoomId(null);
-                    setGameState(initialGameState);
+                    if (keepResultScreenRef.current) {
+                        setHostDisconnected(true);
+                    } else {
+                        setError('ホストとの通信が切断されました。');
+                        setCurrentRoomId(null);
+                        setGameState(initialGameState);
+                    }
                 }
             });
         });
@@ -419,7 +459,25 @@ export default function App() {
             setError('');
             setProductFetchError(false);
             setActiveEmotes([]);
+            setHostDisconnected(false);
+            setKeepResultScreen(false);
         }, 100);
+    };
+
+    const handleReturnToLobby = () => {
+        setKeepResultScreen(false);
+        if (isHost) {
+            const resetPlayers = {};
+            Object.keys(gameState.players).forEach(id => {
+                resetPlayers[id] = { ...gameState.players[id], score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isDobon: false, lastPoints: 0 };
+            });
+            updateGameState({
+                status: 'lobby',
+                currentRound: 0,
+                players: resetPlayers,
+                products: []
+            });
+        }
     };
 
     // モックデータの生成
@@ -676,7 +734,7 @@ export default function App() {
                             playerName={playerName} setPlayerName={setPlayerName} roomIdInput={roomIdInput} setRoomIdInput={setRoomIdInput}
                             handleCreateRoom={handleCreateRoom} handleJoinRoom={handleJoinRoom} error={error} isLoading={isLoading}
                         />
-                    ) : gameState.status === 'lobby' ? (
+                    ) : displayStatus === 'lobby' ? (
                         <LobbyScreen
                             gameState={gameState} isHost={isHost} roomId={currentRoomId} myPeerId={myPeerIdRef.current}
                             updateSetting={(k, v) => updateGameState(prev => ({ ...prev, settings: { ...prev.settings, [k]: v } }))}
@@ -686,12 +744,12 @@ export default function App() {
                             handleLeaveRoom={handleLeaveRoom}
                             productFetchError={productFetchError}
                         />
-                    ) : gameState.status === 'playing' ? (
+                    ) : displayStatus === 'playing' ? (
                         <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} sendLiveGuess={sendLiveGuess} />
-                    ) : gameState.status === 'roundEnd' ? (
+                    ) : displayStatus === 'roundEnd' ? (
                         <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} handleLeaveRoom={handleLeaveRoom} />
-                    ) : gameState.status === 'result' ? (
-                        <ResultScreen gameState={gameState} handleLeaveRoom={handleLeaveRoom} />
+                    ) : displayStatus === 'result' ? (
+                        <ResultScreen gameState={gameState} handleLeaveRoom={handleLeaveRoom} handleReturnToLobby={handleReturnToLobby} hostDisconnected={hostDisconnected} />
                     ) : null}
                 </div>
             </div>
@@ -1358,11 +1416,11 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     );
 }
 
-function ResultScreen({ gameState, handleLeaveRoom }) {
+function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDisconnected }) {
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
 
     return (
-        <div className="mt-8 flex flex-col items-center pb-24 animate-fadeIn">
+        <div className="mt-8 flex flex-col items-center pb-32 animate-fadeIn">
             <div className="animate-float z-10 -mb-6">
                 <h2 className="text-6xl font-black text-yellow-300 text-stroke mb-8 flex items-center gap-3 transform -rotate-2">
                     <Trophy className="w-16 h-16 fill-current" /> 最終結果
@@ -1414,12 +1472,33 @@ function ResultScreen({ gameState, handleLeaveRoom }) {
                 </div>
             </div>
 
-            <button
-                onClick={handleLeaveRoom}
-                className="mt-12 bg-[#450a0a] hover:bg-[#270606] text-white font-black py-4 px-16 rounded-2xl text-2xl btn-solid shadow-[0_6px_0_#000]"
-            >
-                タイトルへ戻る
-            </button>
+            {/* ナビゲーションボタン群 */}
+            <div className="mt-12 flex flex-col items-center gap-6 w-full">
+                <div className="flex flex-col md:flex-row gap-4 justify-center w-full max-w-2xl px-4">
+                    {!hostDisconnected && (
+                        <button
+                            onClick={handleReturnToLobby}
+                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-6 rounded-2xl text-xl btn-solid shadow-[0_6px_0_#1e3a8a] flex items-center justify-center gap-2"
+                        >
+                            <Users strokeWidth={3} /> ロビーへ戻る
+                        </button>
+                    )}
+                    <button
+                        onClick={handleLeaveRoom}
+                        className="flex-1 bg-[#450a0a] hover:bg-[#270606] text-white font-black py-4 px-6 rounded-2xl text-xl btn-solid shadow-[0_6px_0_#000] flex items-center justify-center gap-2"
+                    >
+                        <Home strokeWidth={3} /> タイトルへ戻る
+                    </button>
+                </div>
+
+                {/* ゲストへの保護通知メッセージ */}
+                {hostDisconnected && (
+                    <div className="font-bold text-red-700 bg-red-100 px-6 py-4 rounded-xl border-2 border-red-300 shadow-[0_4px_0_#b91c1c] text-center w-full max-w-lg animate-pulse-pop flex flex-col gap-2">
+                        <AlertTriangle className="w-8 h-8 mx-auto" strokeWidth={3} />
+                        <p>ホストが退出したため、ロビーには戻れません。<br />商品の確認が終わったらタイトルへ戻ってください。</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
