@@ -545,6 +545,17 @@ export default function App() {
         }
     };
 
+    const sendLiveGuess = (guessValue) => {
+        if (isHost) {
+            updateGameState(prev => ({
+                ...prev,
+                players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], liveGuess: guessValue } }
+            }));
+        } else if (connRef.current && connRef.current.open) {
+            connRef.current.send({ type: 'LIVE_GUESS', guess: guessValue });
+        }
+    };
+
     if (!peerReady) {
         return <div className="flex flex-col justify-center items-center h-screen bg-[#ef4444] font-pop text-white gap-4"><Loader2 className="w-16 h-16 animate-spin" /><p className="font-black text-2xl text-stroke">通信準備中...</p></div>;
     }
@@ -570,7 +581,7 @@ export default function App() {
                             productFetchError={productFetchError}
                         />
                     ) : gameState.status === 'playing' ? (
-                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} isHost={isHost} connRef={connRef} />
+                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} sendLiveGuess={sendLiveGuess} />
                     ) : gameState.status === 'roundEnd' ? (
                         <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} handleLeaveRoom={handleLeaveRoom} />
                     ) : gameState.status === 'result' ? (
@@ -890,7 +901,7 @@ function SettingRow({ icon, title, desc, children }) {
     );
 }
 
-function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, isHost, connRef }) {
+function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiveGuess }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -929,23 +940,12 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, isHost,
         if (me?.hasGuessed) return;
 
         const timeoutId = setTimeout(() => {
-            if (isHost) {
-                // ホストの場合は直接自分のステータスを更新して全体にSYNCがかかるようにする仕組みは少し複雑なため、
-                // 便宜上 connRef経由の代わりにイベントとして自分自身に送るか、直接更新する
-                // （簡易化のため、ここでは他の人へのブロードキャストは gameState.players の更新に任せる）
-                if (connRef && connRef.current) {
-                    // host does not have connRef.current to a server, host IS the server.
-                    // This will be handled by sending to all clients when a client sends it.
-                    // For host itself, we skip direct live update to avoid too many renders, 
-                    // or implement a specific direct broadcast.
-                }
-            } else if (connRef.current && connRef.current.open) {
-                connRef.current.send({ type: 'LIVE_GUESS', guess: guessInput });
-            }
+            sendLiveGuess(guessInput);
         }, 300);
 
         return () => clearTimeout(timeoutId);
-    }, [guessInput, gameState.settings.showLiveGuess, me?.hasGuessed, isHost, connRef]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [guessInput, gameState.settings.showLiveGuess, me?.hasGuessed]);
 
     // マウスホイールでの金額調整と、ページスクロール防止処理
     useEffect(() => {
