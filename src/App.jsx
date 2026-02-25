@@ -497,7 +497,7 @@ export default function App() {
                     const currentProduct = state.products[state.currentRound];
                     const newPlayers = { ...state.players };
 
-                    // 最終ラウンドポイント2倍の判定
+                    // 最終ラウンドスコア2倍の判定
                     const isFinalRound = state.currentRound === state.settings.rounds - 1;
                     const multiplier = (state.settings.doubleFinalRound && isFinalRound) ? 2 : 1;
 
@@ -708,8 +708,8 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                     <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
                         <div className="w-12 h-12 rounded-full bg-blue-400 panel-border flex items-center justify-center font-black text-xl text-white shrink-0">3</div>
                         <div>
-                            <h3 className="font-black text-lg text-[#450a0a]">結果発表＆ポイント獲得</h3>
-                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計ポイントが一番高い人が優勝です🏆</p>
+                            <h3 className="font-black text-lg text-[#450a0a]">結果発表＆スコア獲得</h3>
+                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
                         </div>
                     </div>
                 </div>
@@ -838,7 +838,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                             </div>
                         </SettingRow>
 
-                        <SettingRow icon={<Star size={28} strokeWidth={3} className="fill-yellow-400" />} title="最終ラウンド2倍" desc="最後の問題は獲得ポイントが2倍！">
+                        <SettingRow icon={<Star size={28} strokeWidth={3} className="fill-yellow-400" />} title="最終ラウンドスコア2倍" desc="最後の問題は獲得スコアが2倍！">
                             <div className="flex gap-2">
                                 <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', true)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.doubleFinalRound ? 'bg-yellow-400 text-red-700 shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>ON</button>
                                 <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.doubleFinalRound ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
@@ -988,7 +988,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                         <h2 className="text-4xl md:text-6xl font-black text-red-600 text-center text-stroke-sm leading-tight">
                             最終ラウンド！<br />
                             <span className="text-6xl md:text-8xl text-white text-stroke block mt-4 transform rotate-3">
-                                ポイント2倍!!
+                                獲得スコア2倍!!
                             </span>
                         </h2>
                     </div>
@@ -1000,7 +1000,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                 <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] flex items-center">
                     ラウンド <span className="text-red-600 text-3xl mx-1">{gameState.currentRound + 1}</span> / {gameState.settings.rounds}
                     {gameState.settings.doubleFinalRound && isFinalRound && (
-                        <span className="bg-yellow-400 text-red-700 text-sm md:text-base px-2 py-1 rounded-lg ml-3 border-2 border-red-700 animate-pulse-pop shrink-0">ポイント2倍!!</span>
+                        <span className="bg-yellow-400 text-red-700 text-sm md:text-base px-2 py-1 rounded-lg ml-3 border-2 border-red-700 animate-pulse-pop shrink-0">スコア2倍!!</span>
                     )}
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
@@ -1122,7 +1122,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
             <div className="animate-float z-10 -mb-6 flex flex-col items-center">
                 {gameState.settings.doubleFinalRound && isFinalRound && (
                     <div className="bg-yellow-400 text-red-700 font-black text-2xl md:text-4xl px-8 py-2 rounded-full border-4 border-red-700 mb-4 transform rotate-2 animate-pulse-pop shadow-[0_4px_0_#b91c1c]">
-                        🔥 最終ラウンド ポイント2倍!! 🔥
+                        🔥 最終ラウンド 獲得スコア2倍!! 🔥
                     </div>
                 )}
                 <h2 className="text-5xl md:text-6xl font-black text-white text-stroke transform -rotate-2 tracking-widest">
@@ -1156,7 +1156,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                             </div>
                             <div className="text-right flex flex-col items-end">
                                 <div className="font-black text-3xl text-green-500 text-stroke-sm">+{p.lastPoints}</div>
-                                <div className="text-xs font-bold text-gray-400 mt-1 mb-1">獲得ポイント</div>
+                                <div className="text-xs font-bold text-gray-400 mt-1 mb-1">獲得スコア</div>
                                 <div className="text-sm font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md border-2 border-blue-200">累計: {p.score}</div>
                             </div>
                         </div>
@@ -1188,7 +1188,7 @@ function ResultScreen({ gameState, handleLeaveRoom }) {
                         <div className="flex-1 text-2xl md:text-3xl font-black text-[#450a0a]">{p.name}</div>
                         <div className="text-right">
                             <div className="text-4xl md:text-5xl font-black text-red-500 text-stroke-sm">{p.score}</div>
-                            <div className="text-sm font-bold text-gray-500">トータルポイント</div>
+                            <div className="text-sm font-bold text-gray-500">トータルスコア</div>
                         </div>
                     </div>
                 ))}
