@@ -1097,7 +1097,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, isHost,
                                     </div>
                                     <span className="font-bold text-sm text-gray-700">{p.name}</span>
                                     <span className={`font-black ml-2 ${p.hasGuessed ? 'text-green-600' : 'text-blue-600'}`}>
-                                        {p.hasGuessed ? '決定！' : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}` : '考え中...')}
+                                        {p.hasGuessed ? `¥${Number(p.currentGuess).toLocaleString()}!` : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}?` : '考え中...')}
                                     </span>
                                 </div>
                             ))}
