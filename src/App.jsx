@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -42,7 +42,10 @@ export default function App() {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isHost, setIsHost] = useState(false);
-    const [productFetchError, setProductFetchError] = useState(false); // APIエラー表示用ステート
+    const [productFetchError, setProductFetchError] = useState(false);
+
+    // Emote State
+    const [activeEmotes, setActiveEmotes] = useState([]);
 
     // P2P States & Refs
     const peerRef = useRef(null);
@@ -53,7 +56,7 @@ export default function App() {
     // Game State
     const initialGameState = {
         status: 'lobby', // lobby, playing, roundEnd, result
-        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '' },
+        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true },
         currentRound: 0,
         products: [],
         players: {},
@@ -78,14 +81,12 @@ export default function App() {
 
         if (currentHash !== targetHash) {
             try {
-                // 初期表示はreplaceState、以降の画面遷移はpushStateで履歴に残す
                 if (targetHash === '#title') {
                     window.history.replaceState(null, '', window.location.pathname + window.location.search + targetHash);
                 } else {
                     window.history.pushState(null, '', window.location.pathname + window.location.search + targetHash);
                 }
             } catch (err) {
-                // iframe内などのセキュリティ制限でエラーになる場合は、ハッシュのみ変更してクラッシュを防ぐ
                 window.location.hash = targetHash;
             }
         }
@@ -94,16 +95,13 @@ export default function App() {
     // ブラウザの「戻る」「進む」ボタンに対する安全対策
     useEffect(() => {
         const handlePopState = () => {
-            // ゲーム進行中に履歴操作が行われた場合、状態の不整合を防ぐため強制的にリロードしてタイトルに戻す
-            if (currentRoomId) {
-                window.location.reload();
-            }
+            if (currentRoomId) window.location.reload();
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
     }, [currentRoomId]);
 
-    // UI Styles & Animations Injection (Gartic Phone Style)
+    // UI Styles & Animations Injection
     useEffect(() => {
         const style = document.createElement('style');
         style.innerHTML = `
@@ -123,8 +121,8 @@ export default function App() {
       .bg-animated-pattern {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
-        background-color: #ef4444; /* red-500 */
-        background-image: radial-gradient(#b91c1c 5px, transparent 5px); /* red-700 dots */
+        background-color: #ef4444;
+        background-image: radial-gradient(#b91c1c 5px, transparent 5px);
         background-size: 30px 30px;
         animation: scrollBg 2s linear infinite;
         z-index: -1;
@@ -138,9 +136,7 @@ export default function App() {
         border-radius: 1.5rem;
         box-shadow: 0 8px 0 #450a0a;
       }
-      .panel-inset {
-        box-shadow: inset 0 4px 0 rgba(0,0,0,0.1);
-      }
+      .panel-inset { box-shadow: inset 0 4px 0 rgba(0,0,0,0.1); }
       
       /* Solid Buttons */
       .btn-solid {
@@ -152,37 +148,29 @@ export default function App() {
         transform: translateY(6px);
         box-shadow: 0 0px 0 #450a0a;
       }
-      .btn-solid:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-      }
+      .btn-solid:disabled { opacity: 0.6; cursor: not-allowed; }
       
       /* Text Strokes */
-      .text-stroke {
-        text-shadow: -2px -2px 0 #450a0a, 2px -2px 0 #450a0a, -2px 2px 0 #450a0a, 2px 2px 0 #450a0a;
-      }
-      .text-stroke-sm {
-        text-shadow: -1px -1px 0 #450a0a, 1px -1px 0 #450a0a, -1px 1px 0 #450a0a, 1px 1px 0 #450a0a;
-      }
+      .text-stroke { text-shadow: -2px -2px 0 #450a0a, 2px -2px 0 #450a0a, -2px 2px 0 #450a0a, 2px 2px 0 #450a0a; }
+      .text-stroke-sm { text-shadow: -1px -1px 0 #450a0a, 1px -1px 0 #450a0a, -1px 1px 0 #450a0a, 1px 1px 0 #450a0a; }
       
-      /* Keyframe Animations */
-      @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-10px); }
-      }
+      /* Animations */
+      @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
       .animate-float { animation: float 3s ease-in-out infinite; }
       
-      @keyframes pulse-pop {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-      }
+      @keyframes pulse-pop { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
       .animate-pulse-pop { animation: pulse-pop 2s infinite; }
 
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
       .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+
+      @keyframes float-up {
+          0% { transform: translateY(0) scale(0.5); opacity: 0; }
+          20% { transform: translateY(-30px) scale(1.2); opacity: 1; }
+          80% { transform: translateY(-100px) scale(1); opacity: 1; }
+          100% { transform: translateY(-130px) scale(0.8); opacity: 0; }
+      }
+      .animate-float-up { animation: float-up 2.5s ease-out forwards; }
       
       /* Custom Scrollbar */
       .custom-scrollbar::-webkit-scrollbar { width: 12px; }
@@ -192,6 +180,31 @@ export default function App() {
         document.head.appendChild(style);
         return () => document.head.removeChild(style);
     }, []);
+
+    // --- Emote Functions ---
+    const addEmoteToScreen = (senderId, emoji) => {
+        const newEmote = {
+            id: Date.now() + Math.random(),
+            senderId,
+            emoji,
+            left: 10 + Math.random() * 70, // 10% ~ 80%のランダムなX座標
+        };
+        setActiveEmotes(prev => [...prev, newEmote]);
+        setTimeout(() => {
+            setActiveEmotes(prev => prev.filter(e => e.id !== newEmote.id));
+        }, 2500);
+    };
+
+    const handleSendEmote = (emoji) => {
+        addEmoteToScreen(myPeerIdRef.current, emoji);
+        if (isHost) {
+            hostConnectionsRef.current.forEach(conn => {
+                if (conn.open) conn.send({ type: 'EMOTE', senderId: myPeerIdRef.current, emoji });
+            });
+        } else if (connRef.current && connRef.current.open) {
+            connRef.current.send({ type: 'EMOTE', emoji });
+        }
+    };
 
     // --- Host Functions ---
     const updateGameState = (updater) => {
@@ -225,9 +238,7 @@ export default function App() {
 
             updateGameState({
                 status: 'lobby',
-                players: {
-                    [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, isHost: true }
-                }
+                players: { [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, isHost: true } }
             });
         });
 
@@ -244,6 +255,14 @@ export default function App() {
                         ...prev,
                         players: { ...prev.players, [conn.peer]: { ...prev.players[conn.peer], currentGuess: data.guess, hasGuessed: true } }
                     }));
+                } else if (data.type === 'EMOTE') {
+                    addEmoteToScreen(conn.peer, data.emoji);
+                    // ホストから他の全員へ転送
+                    hostConnectionsRef.current.forEach(c => {
+                        if (c.peer !== conn.peer && c.open) {
+                            c.send({ type: 'EMOTE', senderId: conn.peer, emoji: data.emoji });
+                        }
+                    });
                 }
             });
             conn.on('close', () => {
@@ -302,6 +321,8 @@ export default function App() {
                     setError('ルームから退出させられました。');
                     setCurrentRoomId(null);
                     setGameState(initialGameState);
+                } else if (data.type === 'EMOTE') {
+                    addEmoteToScreen(data.senderId, data.emoji);
                 }
             });
 
@@ -320,18 +341,13 @@ export default function App() {
         });
     };
 
-    // 参加者をキックする関数
     const handleKickPlayer = (targetPeerId) => {
         if (!isHost || targetPeerId === myPeerIdRef.current) return;
-
         const conn = hostConnectionsRef.current.find(c => c.peer === targetPeerId);
-        if (conn) {
-            if (conn.open) {
-                conn.send({ type: 'KICKED' });
-                setTimeout(() => conn.close(), 500);
-            }
+        if (conn && conn.open) {
+            conn.send({ type: 'KICKED' });
+            setTimeout(() => conn.close(), 500);
         }
-
         hostConnectionsRef.current = hostConnectionsRef.current.filter(c => c.peer !== targetPeerId);
         updateGameState(prev => {
             const newPlayers = { ...prev.players };
@@ -346,7 +362,6 @@ export default function App() {
                 if (conn.open) conn.send({ type: 'ROOM_CLOSED' });
             });
         }
-
         setTimeout(() => {
             if (peerRef.current) {
                 peerRef.current.destroy();
@@ -359,6 +374,7 @@ export default function App() {
             setIsHost(false);
             setError('');
             setProductFetchError(false);
+            setActiveEmotes([]);
         }, 100);
     };
 
@@ -443,7 +459,6 @@ export default function App() {
         return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
     };
 
-    // ゲーム開始処理（モック使用フラグつき）
     const handleStartGame = async (useMock = false) => {
         setIsLoading(true);
         setProductFetchError(false);
@@ -476,13 +491,18 @@ export default function App() {
                 if (isTimeUp || allGuessed) {
                     const currentProduct = state.products[state.currentRound];
                     const newPlayers = { ...state.players };
+
+                    // 最終ラウンドポイント2倍の判定
+                    const isFinalRound = state.currentRound === state.settings.rounds - 1;
+                    const multiplier = (state.settings.doubleFinalRound && isFinalRound) ? 2 : 1;
+
                     Object.keys(newPlayers).forEach(id => {
                         const p = newPlayers[id];
                         let points = 0;
                         if (p.hasGuessed && p.currentGuess) {
                             const diff = Math.abs(p.currentGuess - currentProduct.price);
                             const percentOff = diff / currentProduct.price;
-                            points = Math.max(0, Math.floor((1 - percentOff) * 1000));
+                            points = Math.max(0, Math.floor((1 - percentOff) * 1000)) * multiplier;
                         }
                         newPlayers[id] = { ...p, score: p.score + points, lastPoints: points };
                     });
@@ -510,7 +530,7 @@ export default function App() {
 
     const submitGuess = (guessValue) => {
         const val = parseInt(guessValue, 10);
-        if (isNaN(val) || val < 0) return; // 0未満のマイナス値は除外
+        if (isNaN(val) || val < 0) return;
         if (isHost) {
             updateGameState(prev => ({
                 ...prev, players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], currentGuess: val, hasGuessed: true } }
@@ -553,6 +573,25 @@ export default function App() {
                     ) : null}
                 </div>
             </div>
+
+            {/* Emote Overlay & Controls */}
+            {currentRoomId && (
+                <>
+                    {/* Active Emotes Rendering */}
+                    {activeEmotes.map(emote => (
+                        <div key={emote.id} className="fixed pointer-events-none z-50 animate-float-up flex flex-col items-center"
+                            style={{ left: `${emote.left}%`, bottom: '120px' }}>
+                            <span className="text-5xl md:text-7xl drop-shadow-lg">{emote.emoji}</span>
+                            <span className="text-xs font-black bg-black bg-opacity-60 text-white px-2 py-1 rounded-full mt-1 border border-white/20 whitespace-nowrap">
+                                {gameState.players[emote.senderId]?.name || '???'}
+                            </span>
+                        </div>
+                    ))}
+
+                    {/* Emote Button Menu */}
+                    <EmoteMenu onEmote={handleSendEmote} />
+                </>
+            )}
         </>
     );
 }
@@ -680,7 +719,6 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
     };
 
     const playersEntries = Object.entries(gameState.players);
-    // Gartic Phoneっぽく空枠を表示するための配列 (最大14人想定)
     const emptySlots = Array(Math.max(0, 14 - playersEntries.length)).fill(null);
 
     return (
@@ -705,7 +743,6 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                 </div>
             </div>
 
-            {/* スマホレイアウト対応: スマホ時は高さを制限せず全内容を表示させる */}
             <div className="panel w-full bg-[#f8fafc] overflow-hidden flex flex-col md:flex-row md:h-[600px]">
                 {/* Left: Players */}
                 <div className="w-full md:w-1/3 flex flex-col border-b-4 md:border-b-0 md:border-r-4 border-[#450a0a] bg-white h-[350px] md:h-full">
@@ -721,7 +758,6 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                                 <span className="font-black text-lg flex-1 truncate text-[#450a0a]">{p.name}</span>
                                 {p.isHost && <Crown className="text-yellow-500 w-8 h-8 mr-2 fill-current" />}
 
-                                {/* ホストのみ他のプレイヤーをキックできるボタンを表示 */}
                                 {!p.isHost && isHost && (
                                     <button
                                         onClick={() => handleKickPlayer(id)}
@@ -785,6 +821,13 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                                 ))}
                             </div>
                         </SettingRow>
+
+                        <SettingRow icon={<Star size={28} strokeWidth={3} className="fill-yellow-400" />} title="最終ラウンド2倍" desc="最後の問題は獲得ポイントが2倍！">
+                            <div className="flex gap-2">
+                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', true)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.doubleFinalRound ? 'bg-yellow-400 text-red-700 shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>ON</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.doubleFinalRound ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
+                            </div>
+                        </SettingRow>
                     </div>
 
                     {/* Footer */}
@@ -845,6 +888,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     const currentProduct = gameState.products[gameState.currentRound];
     const displayImages = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : [currentProduct?.image];
     const isUnlimited = gameState.settings.timeLimit === 0;
+    const isFinalRound = gameState.currentRound === gameState.settings.rounds - 1;
 
     useEffect(() => {
         setSelectedImageIndex(0);
@@ -862,30 +906,21 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     // マウスホイールでの金額調整と、ページスクロール防止処理
     useEffect(() => {
         const handleWheel = (e) => {
-            // ページ全体のスクロールを止める
             e.preventDefault();
-
-            // スクロール方向を取得 (下スクロール: 1, 上スクロール: -1)
             const delta = Math.sign(e.deltaY);
-
             setGuessInput(prev => {
                 let currentVal = parseInt(prev, 10);
                 if (isNaN(currentVal)) currentVal = 0;
-
-                // 遊びやすいように100円単位で増減させる
                 let newVal = currentVal - (delta * 100);
                 if (newVal < 0) newVal = 0;
-
                 return newVal.toString();
             });
         };
 
         const input = inputRef.current;
         if (input) {
-            // passive: false にすることで e.preventDefault() が確実に効くようにする
             input.addEventListener('wheel', handleWheel, { passive: false });
         }
-
         return () => {
             if (input) {
                 input.removeEventListener('wheel', handleWheel);
@@ -904,8 +939,11 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
         <div className="w-full mt-4 flex flex-col items-center animate-fadeIn">
             {/* Header */}
             <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
-                <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a]">
+                <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] flex items-center">
                     ラウンド <span className="text-red-600 text-3xl mx-1">{gameState.currentRound + 1}</span> / {gameState.settings.rounds}
+                    {gameState.settings.doubleFinalRound && isFinalRound && (
+                        <span className="bg-yellow-400 text-red-700 text-sm md:text-base px-2 py-1 rounded-lg ml-3 border-2 border-red-700 animate-pulse-pop shrink-0">ポイント2倍!!</span>
+                    )}
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
                     <LeaveButton onLeave={handleLeaveRoom} />
@@ -977,10 +1015,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
                                     value={guessInput}
                                     onChange={(e) => {
                                         const val = e.target.value;
-                                        // 空文字、または0以上の数字のみ入力を許可する
-                                        if (val === '' || Number(val) >= 0) {
-                                            setGuessInput(val);
-                                        }
+                                        if (val === '' || Number(val) >= 0) setGuessInput(val);
                                     }}
                                 />
                             </div>
@@ -999,19 +1034,25 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
 function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     const currentProduct = gameState.products[gameState.currentRound];
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].lastPoints - a[1].lastPoints);
+    const isFinalRound = gameState.currentRound === gameState.settings.rounds - 1;
 
     return (
         <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative">
             <div className="w-full flex justify-end px-2 mb-4 md:-mb-8 z-20">
                 <LeaveButton onLeave={handleLeaveRoom} />
             </div>
-            <div className="animate-float z-10 -mb-6">
+            <div className="animate-float z-10 -mb-6 flex flex-col items-center">
+                {gameState.settings.doubleFinalRound && isFinalRound && (
+                    <div className="bg-yellow-400 text-red-700 font-black text-xl px-4 py-1 rounded-full border-4 border-red-700 mb-2 transform rotate-2 animate-pulse-pop">
+                        ポイント2倍獲得!!
+                    </div>
+                )}
                 <h2 className="text-5xl md:text-6xl font-black text-white text-stroke transform -rotate-2 tracking-widest">
                     正解発表！
                 </h2>
             </div>
 
-            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12">
+            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4">
                 <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
                 <img src={currentProduct.image} className="w-48 h-48 md:w-64 md:h-64 object-contain mb-6 panel-border rounded-2xl bg-gray-50 shadow-[0_4px_0_#450a0a] p-2" />
                 <h3 className="text-xl md:text-2xl font-black mb-2 text-[#450a0a] leading-snug">{currentProduct.name}</h3>
@@ -1060,7 +1101,7 @@ function ResultScreen({ gameState, handleLeaveRoom }) {
                 </h2>
             </div>
 
-            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white panel p-6 md:p-8 pt-12">
+            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white panel p-6 md:p-8 pt-12 mt-4">
                 {sortedPlayers.map(([id, p], index) => (
                     <div key={id} className={`flex items-center gap-6 bg-white rounded-2xl p-4 md:p-6 panel-border ${index === 0 ? 'bg-yellow-50 shadow-[0_6px_0_#eab308] border-yellow-500 transform scale-[1.02] z-10 animate-pulse-pop' : 'shadow-[0_4px_0_#450a0a]'}`}>
                         <div className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full font-black text-3xl text-white panel-border ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-gray-300'}`}>
@@ -1120,7 +1161,6 @@ function LeaveButton({ onLeave }) {
 
     useEffect(() => {
         if (confirming) {
-            // 3秒経過したら自動的に確認状態を解除する
             const timer = setTimeout(() => setConfirming(false), 3000);
             return () => clearTimeout(timer);
         }
@@ -1144,5 +1184,30 @@ function LeaveButton({ onLeave }) {
         >
             <LogOut size={20} strokeWidth={3} /> 退出
         </button>
+    );
+}
+
+function EmoteMenu({ onEmote }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const emojis = ['😲', '💸', '🤑', '😭', '👏', '🤔'];
+
+    return (
+        <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
+            {isOpen && (
+                <div className="flex flex-col gap-2 bg-white/90 p-2 rounded-full panel-border shadow-[0_4px_0_#450a0a] animate-fadeIn backdrop-blur-sm">
+                    {emojis.map(e => (
+                        <button key={e} onClick={() => { onEmote(e); setIsOpen(false); }} className="text-3xl w-12 h-12 flex items-center justify-center hover:scale-125 transition-transform hover:bg-gray-100 rounded-full">
+                            {e}
+                        </button>
+                    ))}
+                </div>
+            )}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-16 h-16 rounded-full flex items-center justify-center panel-border shadow-[0_4px_0_#450a0a] transition-all hover:scale-105 ${isOpen ? 'bg-gray-200 text-[#450a0a]' : 'bg-yellow-400 text-white'}`}
+            >
+                {isOpen ? <X size={32} strokeWidth={3} /> : <MessageCircle size={32} fill="currentColor" strokeWidth={2} className="text-[#450a0a]" />}
+            </button>
+        </div>
     );
 }
