@@ -113,19 +113,58 @@ export default function App() {
         overflow-x: hidden;
       }
       
-      /* Animated Background Pattern */
-      @keyframes scrollBg {
-        0% { background-position: 0 0; }
-        100% { background-position: 60px 60px; }
-      }
+      /* Animated Background Pattern Base */
       .bg-animated-pattern {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
+        z-index: -1;
+        transition: background-color 0.5s ease;
+      }
+      
+      @keyframes scrollBg {
+        0% { background-position: 0 0, 20px 20px; }
+        100% { background-position: 60px 60px, 80px 80px; }
+      }
+      @keyframes scrollBgDiag {
+        0% { background-position: 0 0; }
+        100% { background-position: 56.56px 56.56px; }
+      }
+      @keyframes scrollBgSlow {
+        0% { background-position: 0 0, 30px 30px; }
+        100% { background-position: 60px 60px, 90px 90px; }
+      }
+      
+      /* Normal Mode (Dots) */
+      .bg-pattern-normal {
         background-color: #ef4444;
         background-image: radial-gradient(#b91c1c 5px, transparent 5px);
         background-size: 30px 30px;
         animation: scrollBg 2s linear infinite;
-        z-index: -1;
+      }
+      
+      /* Dobon Mode (Stripes / Danger) */
+      .bg-pattern-dobon {
+        background-color: #ef4444;
+        background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #b91c1c 10px, #b91c1c 20px);
+        background-size: 28.28px 28.28px;
+        animation: scrollBgDiag 1s linear infinite;
+      }
+
+      /* HighLow Mode (Checkerboard) */
+      .bg-pattern-highlow {
+        background-color: #ef4444;
+        background-image: linear-gradient(45deg, #b91c1c 25%, transparent 25%, transparent 75%, #b91c1c 75%, #b91c1c), linear-gradient(45deg, #b91c1c 25%, transparent 25%, transparent 75%, #b91c1c 75%, #b91c1c);
+        background-size: 40px 40px;
+        background-position: 0 0, 20px 20px;
+        animation: scrollBg 2.5s linear infinite;
+      }
+
+      /* Celeb Mode (Diamonds / Gold accents) */
+      .bg-pattern-celeb {
+        background-color: #ef4444;
+        background-image: radial-gradient(circle at 15px 15px, #fbd38d 3px, transparent 4px), radial-gradient(circle at 45px 45px, #fbbf24 2px, transparent 3px);
+        background-size: 60px 60px;
+        animation: scrollBgSlow 4s linear infinite;
       }
       
       /* Solid Panels & Borders */
@@ -629,7 +668,7 @@ export default function App() {
 
     return (
         <>
-            <div className="bg-animated-pattern"></div>
+            <div className={`bg-animated-pattern bg-pattern-${gameState.settings.gameMode}`}></div>
             <div className="min-h-screen p-4 md:p-8 flex flex-col items-center relative z-10">
                 <div className="w-full max-w-5xl">
                     {!currentRoomId ? (
