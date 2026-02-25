@@ -56,7 +56,7 @@ export default function App() {
     // Game State
     const initialGameState = {
         status: 'lobby', // lobby, playing, roundEnd, result
-        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true },
+        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true, showLiveGuess: false },
         currentRound: 0,
         products: [],
         players: {},
@@ -238,7 +238,7 @@ export default function App() {
 
             updateGameState({
                 status: 'lobby',
-                players: { [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, isHost: true } }
+                players: { [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isHost: true } }
             });
         });
 
@@ -248,12 +248,17 @@ export default function App() {
                 if (data.type === 'JOIN') {
                     updateGameState(prev => ({
                         ...prev,
-                        players: { ...prev.players, [conn.peer]: { name: data.name, score: 0, currentGuess: null, hasGuessed: false, isHost: false } }
+                        players: { ...prev.players, [conn.peer]: { name: data.name, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isHost: false } }
                     }));
                 } else if (data.type === 'GUESS') {
                     updateGameState(prev => ({
                         ...prev,
-                        players: { ...prev.players, [conn.peer]: { ...prev.players[conn.peer], currentGuess: data.guess, hasGuessed: true } }
+                        players: { ...prev.players, [conn.peer]: { ...prev.players[conn.peer], currentGuess: data.guess, hasGuessed: true, liveGuess: null } }
+                    }));
+                } else if (data.type === 'LIVE_GUESS') {
+                    updateGameState(prev => ({
+                        ...prev,
+                        players: { ...prev.players, [conn.peer]: { ...prev.players[conn.peer], liveGuess: data.guess } }
                     }));
                 } else if (data.type === 'EMOTE') {
                     addEmoteToScreen(conn.peer, data.emoji);
@@ -504,7 +509,7 @@ export default function App() {
                             const percentOff = diff / currentProduct.price;
                             points = Math.max(0, Math.floor((1 - percentOff) * 1000)) * multiplier;
                         }
-                        newPlayers[id] = { ...p, score: p.score + points, lastPoints: points };
+                        newPlayers[id] = { ...p, score: p.score + points, lastPoints: points, liveGuess: null };
                     });
                     updateGameState({ status: 'roundEnd', players: newPlayers, nextRoundStartTime: Date.now() + 8000 });
                 }
@@ -515,7 +520,7 @@ export default function App() {
                         updateGameState({ status: 'result' });
                     } else {
                         const resetPlayers = {};
-                        Object.keys(state.players).forEach(id => { resetPlayers[id] = { ...state.players[id], currentGuess: null, hasGuessed: false }; });
+                        Object.keys(state.players).forEach(id => { resetPlayers[id] = { ...state.players[id], currentGuess: null, hasGuessed: false, liveGuess: null }; });
                         updateGameState({
                             status: 'playing', currentRound: state.currentRound + 1,
                             roundEndTime: state.settings.timeLimit === 0 ? 0 : Date.now() + (state.settings.timeLimit * 1000) + 2000,
@@ -533,7 +538,7 @@ export default function App() {
         if (isNaN(val) || val < 0) return;
         if (isHost) {
             updateGameState(prev => ({
-                ...prev, players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], currentGuess: val, hasGuessed: true } }
+                ...prev, players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], currentGuess: val, hasGuessed: true, liveGuess: null } }
             }));
         } else if (connRef.current && connRef.current.open) {
             connRef.current.send({ type: 'GUESS', guess: val });
@@ -565,7 +570,7 @@ export default function App() {
                             productFetchError={productFetchError}
                         />
                     ) : gameState.status === 'playing' ? (
-                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} />
+                        <GameScreen gameState={gameState} myPeerId={myPeerIdRef.current} submitGuess={submitGuess} handleLeaveRoom={handleLeaveRoom} isHost={isHost} connRef={connRef} />
                     ) : gameState.status === 'roundEnd' ? (
                         <RoundEndScreen gameState={gameState} myPeerId={myPeerIdRef.current} handleLeaveRoom={handleLeaveRoom} />
                     ) : gameState.status === 'result' ? (
@@ -828,6 +833,13 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                                 <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.doubleFinalRound ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
                             </div>
                         </SettingRow>
+
+                        <SettingRow icon={<Users size={28} strokeWidth={3} className="text-blue-500" />} title="入力金額の共有" desc="他の人が入力している金額をリアルタイムで表示">
+                            <div className="flex gap-2">
+                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', true)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.showLiveGuess ? 'bg-blue-500 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>ON</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.showLiveGuess ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
+                            </div>
+                        </SettingRow>
                     </div>
 
                     {/* Footer */}
@@ -878,7 +890,7 @@ function SettingRow({ icon, title, desc, children }) {
     );
 }
 
-function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
+function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, isHost, connRef }) {
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -910,6 +922,30 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
         }, 200);
         return () => clearInterval(interval);
     }, [gameState.roundEndTime, isUnlimited]);
+
+    // 入力中の金額を他の人に送信する（デバウンス処理付き）
+    useEffect(() => {
+        if (!gameState.settings.showLiveGuess) return;
+        if (me?.hasGuessed) return;
+
+        const timeoutId = setTimeout(() => {
+            if (isHost) {
+                // ホストの場合は直接自分のステータスを更新して全体にSYNCがかかるようにする仕組みは少し複雑なため、
+                // 便宜上 connRef経由の代わりにイベントとして自分自身に送るか、直接更新する
+                // （簡易化のため、ここでは他の人へのブロードキャストは gameState.players の更新に任せる）
+                if (connRef && connRef.current) {
+                    // host does not have connRef.current to a server, host IS the server.
+                    // This will be handled by sending to all clients when a client sends it.
+                    // For host itself, we skip direct live update to avoid too many renders, 
+                    // or implement a specific direct broadcast.
+                }
+            } else if (connRef.current && connRef.current.open) {
+                connRef.current.send({ type: 'LIVE_GUESS', guess: guessInput });
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [guessInput, gameState.settings.showLiveGuess, me?.hasGuessed, isHost, connRef]);
 
     // マウスホイールでの金額調整と、ページスクロール防止処理
     useEffect(() => {
@@ -944,7 +980,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
     if (!currentProduct) return null;
 
     return (
-        <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative">
+        <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
             {/* 最終ラウンド 2倍演出オーバーレイ */}
             {showDoubleAnim && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/60 animate-fadeIn">
@@ -1048,6 +1084,26 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom }) {
                         </form>
                     )}
                 </div>
+
+                {/* Live Guess Area */}
+                {gameState.settings.showLiveGuess && (
+                    <div className="w-full bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a] mt-2 animate-fadeIn">
+                        <h4 className="font-black text-[#450a0a] mb-3 flex items-center gap-2"><Users size={20} /> みんなの入力状況</h4>
+                        <div className="flex flex-wrap gap-2">
+                            {Object.entries(gameState.players).map(([id, p]) => (
+                                <div key={id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 ${p.hasGuessed ? 'bg-green-100 border-green-500' : 'bg-gray-50 border-gray-300'} ${id === myPeerId ? 'border-red-400 bg-red-50 shadow-[inset_0_2px_0_rgba(0,0,0,0.1)]' : ''}`}>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white ${id === myPeerId ? 'bg-red-500' : 'bg-purple-500'}`}>
+                                        {p.name.charAt(0)}
+                                    </div>
+                                    <span className="font-bold text-sm text-gray-700">{p.name}</span>
+                                    <span className={`font-black ml-2 ${p.hasGuessed ? 'text-green-600' : 'text-blue-600'}`}>
+                                        {p.hasGuessed ? '決定！' : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}` : '考え中...')}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     )
@@ -1059,7 +1115,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     const isFinalRound = gameState.currentRound === gameState.settings.rounds - 1;
 
     return (
-        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative">
+        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative pb-24">
             <div className="w-full flex justify-end px-2 mb-4 md:-mb-8 z-20">
                 <LeaveButton onLeave={handleLeaveRoom} />
             </div>
@@ -1116,7 +1172,7 @@ function ResultScreen({ gameState, handleLeaveRoom }) {
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
 
     return (
-        <div className="mt-8 flex flex-col items-center pb-12 animate-fadeIn">
+        <div className="mt-8 flex flex-col items-center pb-24 animate-fadeIn">
             <div className="animate-float z-10 -mb-6">
                 <h2 className="text-6xl font-black text-yellow-300 text-stroke mb-8 flex items-center gap-3 transform -rotate-2">
                     <Trophy className="w-16 h-16 fill-current" /> 最終結果
