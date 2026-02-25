@@ -2,7 +2,7 @@
 import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info } from 'lucide-react';
 
 // --- Rakuten API Constants ---
-const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6'; 
+const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
 const RAKUTEN_AFFILIATE_ID = '512f7071.24021527.512f7072.13b4d1f3';
 const RAKUTEN_ACCESS_KEY = 'pk_cVhHUQ7wfo6evW4nFUckq4kZQKdGbxrn1Ume4NB7YaK';
 
@@ -346,7 +346,7 @@ export default function App() {
                 if (conn.open) conn.send({ type: 'ROOM_CLOSED' });
             });
         }
-        
+
         setTimeout(() => {
             if (peerRef.current) {
                 peerRef.current.destroy();
@@ -357,7 +357,7 @@ export default function App() {
             setCurrentRoomId(null);
             setGameState(initialGameState);
             setIsHost(false);
-            setError(''); 
+            setError('');
             setProductFetchError(false);
         }, 100);
     };
@@ -793,13 +793,13 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                         {isHost && (
                             productFetchError ? (
                                 <div className="flex flex-col md:flex-row gap-3 items-center w-full animate-fadeIn bg-red-100 p-3 rounded-xl panel-border border-red-400">
-                                    <span className="text-red-700 font-black text-sm md:text-base flex items-center gap-1 shrink-0"><AlertTriangle className="w-5 h-5"/> 商品取得に失敗</span>
+                                    <span className="text-red-700 font-black text-sm md:text-base flex items-center gap-1 shrink-0"><AlertTriangle className="w-5 h-5" /> 商品取得に失敗</span>
                                     <div className="flex gap-2 w-full md:ml-auto">
                                         <button onClick={() => startGame(false)} disabled={isLoading} className="flex-1 md:flex-none bg-blue-500 hover:bg-blue-400 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm">
                                             {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : <><RefreshCw className="w-4 h-4" />再試行</>}
                                         </button>
                                         <button onClick={() => startGame(true)} disabled={isLoading} className="flex-1 md:flex-none bg-gray-600 hover:bg-gray-500 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm whitespace-nowrap">
-                                            <Play className="w-4 h-4 fill-current"/> モックで開始
+                                            <Play className="w-4 h-4 fill-current" /> モックで開始
                                         </button>
                                     </div>
                                 </div>
@@ -1035,9 +1035,10 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                                     {p.hasGuessed && <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded">(誤差 ¥{diff.toLocaleString()})</span>}
                                 </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end">
                                 <div className="font-black text-3xl text-green-500 text-stroke-sm">+{p.lastPoints}</div>
-                                <div className="text-xs font-bold text-gray-400 mt-1">ポイント</div>
+                                <div className="text-xs font-bold text-gray-400 mt-1 mb-1">獲得ポイント</div>
+                                <div className="text-sm font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md border-2 border-blue-200">累計: {p.score}</div>
                             </div>
                         </div>
                     );
