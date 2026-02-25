@@ -896,12 +896,20 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
 
                     <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8fafc] custom-scrollbar panel-inset">
                         <SettingRow icon={<Crown size={28} strokeWidth={3} className="text-yellow-500" />} title="ゲームモード" desc="遊び方のルールを選択">
-                            <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.gameMode} onChange={(e) => updateSetting('gameMode', e.target.value)}>
-                                <option value="normal">通常モード</option>
-                                <option value="dobon">ドボンモード</option>
-                                <option value="highlow">ハイ＆ローモード</option>
-                                <option value="celeb">セレブモード</option>
-                            </select>
+                            <div className="flex flex-col gap-2">
+                                <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.gameMode} onChange={(e) => updateSetting('gameMode', e.target.value)}>
+                                    <option value="normal">通常モード</option>
+                                    <option value="dobon">ドボンモード</option>
+                                    <option value="highlow">ハイ＆ローモード</option>
+                                    <option value="celeb">セレブモード</option>
+                                </select>
+                                <div className="text-xs md:text-sm font-bold text-gray-600 bg-yellow-50 p-2 rounded-lg border-2 border-yellow-200 leading-snug">
+                                    {gameState.settings.gameMode === 'normal' && '💡 正解の金額に一番近い人が高得点！'}
+                                    {gameState.settings.gameMode === 'dobon' && '💡 1円でもオーバーするとドボンで0点！'}
+                                    {gameState.settings.gameMode === 'highlow' && '💡 基準価格より「高いか安いか」の2択！'}
+                                    {gameState.settings.gameMode === 'celeb' && '💡 5万円以上の高級品ばかりが登場！'}
+                                </div>
+                            </div>
                         </SettingRow>
 
                         <SettingRow icon={<ShoppingCart size={28} strokeWidth={3} />} title="ジャンル" desc="出題される商品のカテゴリを選択">
