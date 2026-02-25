@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -56,7 +56,7 @@ export default function App() {
     // Game State
     const initialGameState = {
         status: 'lobby', // lobby, playing, roundEnd, result
-        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true, showLiveGuess: false },
+        settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true, showLiveGuess: false, gameMode: 'normal' },
         currentRound: 0,
         products: [],
         players: {},
@@ -238,7 +238,7 @@ export default function App() {
 
             updateGameState({
                 status: 'lobby',
-                players: { [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isHost: true } }
+                players: { [id]: { name: playerName, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isDobon: false, isHost: true } }
             });
         });
 
@@ -248,7 +248,7 @@ export default function App() {
                 if (data.type === 'JOIN') {
                     updateGameState(prev => ({
                         ...prev,
-                        players: { ...prev.players, [conn.peer]: { name: data.name, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isHost: false } }
+                        players: { ...prev.players, [conn.peer]: { name: data.name, score: 0, currentGuess: null, hasGuessed: false, liveGuess: null, isDobon: false, isHost: false } }
                     }));
                 } else if (data.type === 'GUESS') {
                     updateGameState(prev => ({
@@ -384,23 +384,51 @@ export default function App() {
     };
 
     // モックデータの生成
-    const getMockProducts = (rounds) => {
+    const getMockProducts = (rounds, gameMode) => {
         const fallbackProducts = [
             { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
             { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
             { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
         ];
+
         let items = [];
-        for (let i = 0; i < rounds; i++) items.push(fallbackProducts[i % fallbackProducts.length]);
-        return items.sort(() => 0.5 - Math.random());
+        for (let i = 0; i < rounds; i++) {
+            let item = { ...fallbackProducts[i % fallbackProducts.length] };
+            if (gameMode === 'celeb') {
+                item.price = item.price * 15; // セレブ風に価格を高くする
+            }
+            items.push(item);
+        }
+
+        items = items.sort(() => 0.5 - Math.random());
+
+        if (gameMode === 'highlow') {
+            items = items.map(item => {
+                const offsetPercent = 0.1 + Math.random() * 0.4;
+                const sign = Math.random() > 0.5 ? 1 : -1;
+                let basePrice = Math.floor(item.price * (1 + offsetPercent * sign));
+                if (basePrice <= 0) basePrice = Math.floor(item.price / 2);
+                basePrice = Math.round(basePrice / 100) * 100;
+                return { ...item, basePrice };
+            });
+        }
+        return items;
     };
 
     // APIからの商品フェッチ
-    const fetchProducts = async (genreId, rounds, keyword) => {
+    const fetchProducts = async (genreId, rounds, keyword, gameMode) => {
         let rawItems = [];
+        let isCeleb = gameMode === 'celeb';
+        let apiKeyword = keyword;
 
-        if (keyword && keyword.trim() !== '') {
-            const urlPage1 = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=1`;
+        if (isCeleb && (!keyword || keyword.trim() === '') && genreId === '0') {
+            apiKeyword = "高級";
+        }
+
+        let minPriceParam = isCeleb ? "&minPrice=50000" : "";
+
+        if ((apiKeyword && apiKeyword.trim() !== '') || isCeleb) {
+            const urlPage1 = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(apiKeyword || "高級")}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}${minPriceParam}&page=1`;
             const res1 = await fetch(urlPage1);
             if (!res1.ok) throw new Error(`API Error: ${res1.status}`);
             const data1 = await res1.json();
@@ -413,7 +441,7 @@ export default function App() {
             if (maxPage > 1) {
                 const randomSearchPage = Math.floor(Math.random() * maxPage) + 1;
                 if (randomSearchPage !== 1) {
-                    const urlRandom = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(keyword)}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}&page=${randomSearchPage}`;
+                    const urlRandom = `https://openapi.rakuten.co.jp/ichibams/api/IchibaItem/Search/20220601?format=json&keyword=${encodeURIComponent(apiKeyword || "高級")}${genreId !== '0' ? `&genreId=${genreId}` : ''}&affiliateId=${RAKUTEN_AFFILIATE_ID}&applicationId=${RAKUTEN_APP_ID}&accessKey=${RAKUTEN_ACCESS_KEY}${minPriceParam}&page=${randomSearchPage}`;
                     const resRandom = await fetch(urlRandom);
                     if (resRandom.ok) {
                         const dataRandom = await resRandom.json();
@@ -461,7 +489,21 @@ export default function App() {
         }).filter(i => i.image && i.price > 0);
 
         if (items.length < rounds) throw new Error("商品数が足りません");
-        return items.sort(() => 0.5 - Math.random()).slice(0, rounds);
+
+        let finalItems = items.sort(() => 0.5 - Math.random()).slice(0, rounds);
+
+        if (gameMode === 'highlow') {
+            finalItems = finalItems.map(item => {
+                const offsetPercent = 0.1 + Math.random() * 0.4;
+                const sign = Math.random() > 0.5 ? 1 : -1;
+                let basePrice = Math.floor(item.price * (1 + offsetPercent * sign));
+                if (basePrice <= 0) basePrice = Math.floor(item.price / 2);
+                basePrice = Math.round(basePrice / 100) * 100;
+                return { ...item, basePrice };
+            });
+        }
+
+        return finalItems;
     };
 
     const handleStartGame = async (useMock = false) => {
@@ -470,9 +512,9 @@ export default function App() {
         try {
             let products;
             if (useMock) {
-                products = getMockProducts(gameState.settings.rounds);
+                products = getMockProducts(gameState.settings.rounds, gameState.settings.gameMode);
             } else {
-                products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds, gameState.settings.keyword);
+                products = await fetchProducts(gameState.settings.genreId, gameState.settings.rounds, gameState.settings.keyword, gameState.settings.gameMode);
             }
             updateGameState({ status: 'playing', products, currentRound: 0, roundEndTime: gameState.settings.timeLimit === 0 ? 0 : Date.now() + (gameState.settings.timeLimit * 1000) + 2000 });
         } catch (error) {
@@ -497,19 +539,39 @@ export default function App() {
                     const currentProduct = state.products[state.currentRound];
                     const newPlayers = { ...state.players };
 
-                    // 最終ラウンドスコア2倍の判定
                     const isFinalRound = state.currentRound === state.settings.rounds - 1;
                     const multiplier = (state.settings.doubleFinalRound && isFinalRound) ? 2 : 1;
 
                     Object.keys(newPlayers).forEach(id => {
                         const p = newPlayers[id];
                         let points = 0;
-                        if (p.hasGuessed && p.currentGuess) {
-                            const diff = Math.abs(p.currentGuess - currentProduct.price);
-                            const percentOff = diff / currentProduct.price;
-                            points = Math.max(0, Math.floor((1 - percentOff) * 1000)) * multiplier;
+                        let isDobon = false;
+
+                        if (p.hasGuessed && p.currentGuess !== null) {
+                            if (state.settings.gameMode === 'highlow') {
+                                const isHigh = currentProduct.price > currentProduct.basePrice;
+                                const correctGuess = isHigh ? 'high' : 'low';
+                                if (p.currentGuess === correctGuess) {
+                                    points = 1000 * multiplier;
+                                }
+                            } else if (state.settings.gameMode === 'dobon') {
+                                const guessVal = Number(p.currentGuess);
+                                if (guessVal > currentProduct.price) {
+                                    points = 0;
+                                    isDobon = true;
+                                } else {
+                                    const diff = currentProduct.price - guessVal;
+                                    const percentOff = diff / currentProduct.price;
+                                    points = Math.max(0, Math.floor((1 - percentOff) * 1000)) * multiplier;
+                                }
+                            } else {
+                                const guessVal = Number(p.currentGuess);
+                                const diff = Math.abs(guessVal - currentProduct.price);
+                                const percentOff = diff / currentProduct.price;
+                                points = Math.max(0, Math.floor((1 - percentOff) * 1000)) * multiplier;
+                            }
                         }
-                        newPlayers[id] = { ...p, score: p.score + points, lastPoints: points, liveGuess: null };
+                        newPlayers[id] = { ...p, score: p.score + points, lastPoints: points, liveGuess: null, isDobon };
                     });
                     updateGameState({ status: 'roundEnd', players: newPlayers, nextRoundStartTime: Date.now() + 8000 });
                 }
@@ -520,7 +582,9 @@ export default function App() {
                         updateGameState({ status: 'result' });
                     } else {
                         const resetPlayers = {};
-                        Object.keys(state.players).forEach(id => { resetPlayers[id] = { ...state.players[id], currentGuess: null, hasGuessed: false, liveGuess: null }; });
+                        Object.keys(state.players).forEach(id => {
+                            resetPlayers[id] = { ...state.players[id], currentGuess: null, hasGuessed: false, liveGuess: null, isDobon: false };
+                        });
                         updateGameState({
                             status: 'playing', currentRound: state.currentRound + 1,
                             roundEndTime: state.settings.timeLimit === 0 ? 0 : Date.now() + (state.settings.timeLimit * 1000) + 2000,
@@ -534,8 +598,11 @@ export default function App() {
     }, [isHost]);
 
     const submitGuess = (guessValue) => {
-        const val = parseInt(guessValue, 10);
-        if (isNaN(val) || val < 0) return;
+        let val = guessValue;
+        if (gameState.settings.gameMode !== 'highlow') {
+            val = parseInt(guessValue, 10);
+            if (isNaN(val) || val < 0) return;
+        }
         if (isHost) {
             updateGameState(prev => ({
                 ...prev, players: { ...prev.players, [myPeerIdRef.current]: { ...prev.players[myPeerIdRef.current], currentGuess: val, hasGuessed: true, liveGuess: null } }
@@ -686,7 +753,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
             </div>
 
             {/* 遊び方セクション */}
-            <div className="panel w-full max-w-2xl bg-[#f8fafc] p-6 md:p-8">
+            <div className="panel w-full max-w-2xl bg-[#f8fafc] p-6 md:p-8 mt-8">
                 <h2 className="text-2xl font-black text-[#450a0a] mb-6 flex items-center gap-2 border-b-4 border-dashed border-[#450a0a] pb-4">
                     <Info className="w-8 h-8 text-blue-500" strokeWidth={3} /> このゲームの遊び方
                 </h2>
@@ -711,6 +778,31 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                             <h3 className="font-black text-lg text-[#450a0a]">結果発表＆スコア獲得</h3>
                             <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* モード紹介セクション */}
+            <div className="panel w-full max-w-2xl bg-orange-50 p-6 md:p-8 mt-8">
+                <h2 className="text-2xl font-black text-[#450a0a] mb-6 flex items-center gap-2 border-b-4 border-dashed border-[#450a0a] pb-4">
+                    <Trophy className="w-8 h-8 text-orange-500" strokeWidth={3} /> ゲームモードの紹介
+                </h2>
+                <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <h3 className="font-black text-lg text-green-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
+                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <h3 className="font-black text-lg text-red-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
+                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <h3 className="font-black text-lg text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ローモード</h3>
+                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
+                    </div>
+                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <h3 className="font-black text-lg text-yellow-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
+                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
                     </div>
                 </div>
             </div>
@@ -803,6 +895,15 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                     </div>
 
                     <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8fafc] custom-scrollbar panel-inset">
+                        <SettingRow icon={<Crown size={28} strokeWidth={3} className="text-yellow-500" />} title="ゲームモード" desc="遊び方のルールを選択">
+                            <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.gameMode} onChange={(e) => updateSetting('gameMode', e.target.value)}>
+                                <option value="normal">通常モード</option>
+                                <option value="dobon">ドボンモード</option>
+                                <option value="highlow">ハイ＆ローモード</option>
+                                <option value="celeb">セレブモード</option>
+                            </select>
+                        </SettingRow>
+
                         <SettingRow icon={<ShoppingCart size={28} strokeWidth={3} />} title="ジャンル" desc="出題される商品のカテゴリを選択">
                             <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.genreId} onChange={(e) => updateSetting('genreId', e.target.value)}>
                                 <option value="0">すべてのジャンル</option>
@@ -886,7 +987,7 @@ function SettingRow({ icon, title, desc, children }) {
     return (
         <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
             <div className="flex items-center gap-4 w-full md:w-1/2">
-                <div className="bg-red-100 p-3 rounded-xl text-red-600 panel-border">
+                <div className="bg-red-100 p-3 rounded-xl text-red-600 panel-border shrink-0">
                     {icon}
                 </div>
                 <div>
@@ -905,7 +1006,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
     const [guessInput, setGuessInput] = useState('');
     const [timeLeft, setTimeLeft] = useState(gameState.settings.timeLimit);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [showDoubleAnim, setShowDoubleAnim] = useState(false); // 2倍演出用ステート
+    const [showDoubleAnim, setShowDoubleAnim] = useState(false);
     const inputRef = useRef(null);
 
     const me = gameState.players[myPeerId];
@@ -913,15 +1014,15 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
     const displayImages = currentProduct?.images && currentProduct.images.length > 0 ? currentProduct.images : [currentProduct?.image];
     const isUnlimited = gameState.settings.timeLimit === 0;
     const isFinalRound = gameState.currentRound === gameState.settings.rounds - 1;
+    const isHighLow = gameState.settings.gameMode === 'highlow';
 
     useEffect(() => {
         setSelectedImageIndex(0);
         setGuessInput('');
 
-        // 最終ラウンド開始時にアニメーションを表示
         if (isFinalRound && gameState.settings.doubleFinalRound) {
             setShowDoubleAnim(true);
-            const timer = setTimeout(() => setShowDoubleAnim(false), 3000); // 3秒で消す
+            const timer = setTimeout(() => setShowDoubleAnim(false), 3000);
             return () => clearTimeout(timer);
         }
     }, [gameState.currentRound, isFinalRound, gameState.settings.doubleFinalRound]);
@@ -934,9 +1035,8 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
         return () => clearInterval(interval);
     }, [gameState.roundEndTime, isUnlimited]);
 
-    // 入力中の金額を他の人に送信する（デバウンス処理付き）
     useEffect(() => {
-        if (!gameState.settings.showLiveGuess) return;
+        if (!gameState.settings.showLiveGuess || isHighLow) return;
         if (me?.hasGuessed) return;
 
         const timeoutId = setTimeout(() => {
@@ -945,10 +1045,10 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
 
         return () => clearTimeout(timeoutId);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [guessInput, gameState.settings.showLiveGuess, me?.hasGuessed]);
+    }, [guessInput, gameState.settings.showLiveGuess, me?.hasGuessed, isHighLow]);
 
-    // マウスホイールでの金額調整と、ページスクロール防止処理
     useEffect(() => {
+        if (isHighLow) return;
         const handleWheel = (e) => {
             e.preventDefault();
             const delta = Math.sign(e.deltaY);
@@ -970,7 +1070,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                 input.removeEventListener('wheel', handleWheel);
             }
         };
-    }, []);
+    }, [isHighLow]);
 
     const onSubmit = (e) => {
         e.preventDefault();
@@ -981,7 +1081,6 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
 
     return (
         <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
-            {/* 最終ラウンド 2倍演出オーバーレイ */}
             {showDoubleAnim && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/60 animate-fadeIn">
                     <div className="bg-yellow-400 border-8 border-red-600 rounded-3xl p-8 md:p-12 transform -rotate-6 animate-pulse-pop shadow-[0_15px_0_#991b1b]">
@@ -1061,6 +1160,28 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                                 {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
                             </p>
                         </div>
+                    ) : isHighLow ? (
+                        <div className="flex flex-col items-center gap-4 w-full">
+                            <div className="text-xl md:text-2xl font-black text-white text-stroke-sm mb-2 text-center">
+                                実際の価格は、基準価格 <span className="text-yellow-300 text-3xl md:text-4xl bg-black/30 px-3 py-1 rounded-xl">¥{currentProduct.basePrice.toLocaleString()}</span> より...
+                            </div>
+                            <div className="flex w-full gap-4 md:gap-8">
+                                <button
+                                    onClick={() => submitGuess('high')}
+                                    disabled={me?.hasGuessed}
+                                    className="flex-1 bg-red-500 hover:bg-red-400 text-white font-black py-4 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <ArrowUpCircle size={32} /> 高い
+                                </button>
+                                <button
+                                    onClick={() => submitGuess('low')}
+                                    disabled={me?.hasGuessed}
+                                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-black py-4 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid disabled:opacity-50 flex items-center justify-center gap-2"
+                                >
+                                    <ArrowDownCircle size={32} /> 安い
+                                </button>
+                            </div>
+                        </div>
                     ) : (
                         <form onSubmit={onSubmit} className="flex flex-col md:flex-row items-center gap-4 w-full">
                             <div className="flex items-center gap-3 flex-1 w-full bg-white rounded-2xl panel-border px-4 py-2 shadow-[inset_0_4px_0_rgba(0,0,0,0.1)]">
@@ -1086,7 +1207,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                 </div>
 
                 {/* Live Guess Area */}
-                {gameState.settings.showLiveGuess && (
+                {gameState.settings.showLiveGuess && !isHighLow && (
                     <div className="w-full bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a] mt-2 animate-fadeIn">
                         <h4 className="font-black text-[#450a0a] mb-3 flex items-center gap-2"><Users size={20} /> みんなの入力状況</h4>
                         <div className="flex flex-wrap gap-2">
@@ -1113,6 +1234,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     const currentProduct = gameState.products[gameState.currentRound];
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].lastPoints - a[1].lastPoints);
     const isFinalRound = gameState.currentRound === gameState.settings.rounds - 1;
+    const isHighLow = gameState.settings.gameMode === 'highlow';
 
     return (
         <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative pb-24">
@@ -1132,6 +1254,11 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
 
             <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4">
                 <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
+
+                {isHighLow && (
+                    <div className="text-xl font-black text-gray-500 mb-2">基準価格: ¥{currentProduct.basePrice.toLocaleString()}</div>
+                )}
+
                 <img src={currentProduct.image} className="w-48 h-48 md:w-64 md:h-64 object-contain mb-6 panel-border rounded-2xl bg-gray-50 shadow-[0_4px_0_#450a0a] p-2" />
                 <h3 className="text-xl md:text-2xl font-black mb-2 text-[#450a0a] leading-snug">{currentProduct.name}</h3>
                 <p className="text-gray-500 font-bold mt-2">気になる正解は...</p>
@@ -1143,15 +1270,31 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
 
             <div className="w-full max-w-2xl space-y-4 mt-8">
                 {sortedPlayers.map(([id, p], index) => {
-                    const diff = p.currentGuess ? Math.abs(p.currentGuess - currentProduct.price) : null;
+                    let guessDisplay = '時間切れ';
+                    let diffDisplay = null;
+
+                    if (isHighLow) {
+                        if (p.currentGuess === 'high') guessDisplay = 'High (高い)';
+                        if (p.currentGuess === 'low') guessDisplay = 'Low (安い)';
+                    } else if (p.hasGuessed) {
+                        guessDisplay = `¥${Number(p.currentGuess).toLocaleString()}`;
+                        diffDisplay = `(誤差 ¥${Math.abs(Number(p.currentGuess) - currentProduct.price).toLocaleString()})`;
+                    }
+
                     return (
                         <div key={id} className={`flex items-center gap-4 bg-white rounded-2xl p-4 panel-border ${id === myPeerId ? 'shadow-[0_6px_0_#ef4444] border-red-500' : 'shadow-[0_6px_0_#450a0a]'}`}>
                             <div className="w-10 text-center font-black text-gray-400 text-2xl">{index + 1}</div>
                             <div className="flex-1">
                                 <div className="font-black text-xl text-[#450a0a]">{p.name}</div>
                                 <div className="text-sm text-gray-600 font-bold mt-1">
-                                    予想: {p.hasGuessed ? <span className="text-red-600 text-lg">¥{p.currentGuess.toLocaleString()}</span> : '時間切れ'}
-                                    {p.hasGuessed && <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded">(誤差 ¥{diff.toLocaleString()})</span>}
+                                    予想: <span className={`text-lg ${p.isDobon ? 'text-gray-400 line-through' : 'text-red-600'}`}>{guessDisplay}</span>
+                                    {diffDisplay && <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded">{diffDisplay}</span>}
+                                    {p.isDobon && <span className="ml-2 text-xs bg-red-600 text-white px-2 py-1 rounded shadow-[0_2px_0_#7f1d1d] animate-pulse-pop inline-block">ドボン!!</span>}
+                                    {isHighLow && p.hasGuessed && (
+                                        <span className={`ml-2 text-xs px-2 py-1 rounded font-black text-white ${p.lastPoints > 0 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                            {p.lastPoints > 0 ? '正解！' : '不正解...'}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                             <div className="text-right flex flex-col items-end">
