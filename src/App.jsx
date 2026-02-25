@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -528,7 +528,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     const [tab, setTab] = useState('create');
 
     return (
-        <div className="flex flex-col items-center justify-center mt-12 space-y-8 animate-fadeIn">
+        <div className="flex flex-col items-center justify-center mt-12 space-y-8 animate-fadeIn pb-12">
             <div className="animate-float text-center">
                 <h1 className="text-5xl md:text-7xl font-black text-white text-stroke flex items-center justify-center gap-2">
                     <ShoppingCart className="w-12 h-12 md:w-16 md:h-16" strokeWidth={3} />
@@ -591,6 +591,36 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                         >
                             {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <><Play className="w-8 h-8 fill-current" /> {tab === 'create' ? '開始' : '参加'}</>}
                         </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* 遊び方セクション */}
+            <div className="panel w-full max-w-2xl bg-[#f8fafc] p-6 md:p-8">
+                <h2 className="text-2xl font-black text-[#450a0a] mb-6 flex items-center gap-2 border-b-4 border-dashed border-[#450a0a] pb-4">
+                    <Info className="w-8 h-8 text-blue-500" strokeWidth={3} /> このゲームの遊び方
+                </h2>
+                <div className="space-y-6">
+                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <div className="w-12 h-12 rounded-full bg-yellow-300 panel-border flex items-center justify-center font-black text-xl text-[#450a0a] shrink-0">1</div>
+                        <div>
+                            <h3 className="font-black text-lg text-[#450a0a]">部屋を作って集まる</h3>
+                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <div className="w-12 h-12 rounded-full bg-red-400 panel-border flex items-center justify-center font-black text-xl text-white shrink-0">2</div>
+                        <div>
+                            <h3 className="font-black text-lg text-[#450a0a]">商品の値段を予想する</h3>
+                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
+                        </div>
+                    </div>
+                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                        <div className="w-12 h-12 rounded-full bg-blue-400 panel-border flex items-center justify-center font-black text-xl text-white shrink-0">3</div>
+                        <div>
+                            <h3 className="font-black text-lg text-[#450a0a]">結果発表＆ポイント獲得</h3>
+                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計ポイントが一番高い人が優勝です🏆</p>
+                        </div>
                     </div>
                 </div>
             </div>
