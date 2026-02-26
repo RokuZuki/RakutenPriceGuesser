@@ -48,7 +48,6 @@ export default function App() {
     const [activeEmotes, setActiveEmotes] = useState([]);
 
     // --- Result Screen Keep States ---
-    // リザルト画面でホストがロビーやタイトルに戻っても、ゲストの画面を維持するためのステート群
     const [keepResultScreen, setKeepResultScreen] = useState(false);
     const keepResultScreenRef = useRef(false);
     const [hostDisconnected, setHostDisconnected] = useState(false);
@@ -66,7 +65,7 @@ export default function App() {
 
     // Game State
     const initialGameState = {
-        status: 'lobby', // lobby, playing, roundEnd, result
+        status: 'lobby',
         settings: { genreId: '0', timeLimit: 30, rounds: 3, keyword: '', doubleFinalRound: true, showLiveGuess: false, gameMode: 'normal' },
         currentRound: 0,
         products: [],
@@ -79,7 +78,6 @@ export default function App() {
 
     // --- State Sync for Keep Result ---
     useEffect(() => {
-        // リザルト画面に入ったら画面を保護する。次のゲームが始まったら保護を解除する。
         if (gameState.status === 'result') {
             setKeepResultScreen(true);
             setResultData(prev => prev || gameState);
@@ -89,7 +87,6 @@ export default function App() {
         }
     }, [gameState.status, gameState]);
 
-    // 実際に画面に描画するステータス（保護中はサーバーがlobbyになってもresultを維持）
     let displayStatus = gameState.status;
     if (gameState.status === 'result' || gameState.status === 'lobby') {
         if (hostDisconnected) {
@@ -134,15 +131,15 @@ export default function App() {
         return () => window.removeEventListener('popstate', handlePopState);
     }, [currentRoomId]);
 
-    // UI Styles & Animations Injection
+    // UI Styles & Animations Injection (Rich Redesign)
     useEffect(() => {
         const style = document.createElement('style');
         style.innerHTML = `
-      @import url('https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@700;900&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
       
       body {
-        font-family: 'M PLUS Rounded 1c', sans-serif;
-        color: #450a0a;
+        font-family: 'Noto Sans JP', sans-serif;
+        color: #1e293b;
         overflow-x: hidden;
       }
       
@@ -151,80 +148,96 @@ export default function App() {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
         z-index: -1;
-        transition: background-color 0.5s ease;
+        transition: background 1s ease;
       }
       
-      @keyframes scrollBg {
-        0% { background-position: 0 0, 20px 20px; }
-        100% { background-position: 60px 60px, 80px 80px; }
-      }
-      @keyframes scrollBgDiag {
-        0% { background-position: 0 0; }
-        100% { background-position: 56.56px 56.56px; }
-      }
-      @keyframes scrollBgSlow {
-        0% { background-position: 0 0, 30px 30px; }
-        100% { background-position: 60px 60px, 90px 90px; }
-      }
-      
-      /* Normal Mode (Dots) */
+      /* Normal Mode (Elegant Red Gradient) */
       .bg-pattern-normal {
-        background-color: #ef4444;
-        background-image: radial-gradient(#b91c1c 5px, transparent 5px);
+        background: linear-gradient(135deg, #991b1b, #b91c1c, #7f1d1d);
+        background-size: 200% 200%;
+        animation: gradientShift 10s ease infinite;
+      }
+      .bg-pattern-normal::before {
+        content: ""; position: absolute; inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px);
         background-size: 30px 30px;
-        animation: scrollBg 2s linear infinite;
+        opacity: 0.8;
       }
       
-      /* Dobon Mode (Stripes / Danger) */
+      /* Dobon Mode (Warning Stripes with Blur) */
       .bg-pattern-dobon {
-        background-color: #ef4444;
-        background-image: repeating-linear-gradient(-45deg, transparent, transparent 10px, #b91c1c 10px, #b91c1c 20px);
-        background-size: 28.28px 28.28px;
-        animation: scrollBgDiag 1s linear infinite;
+        background: repeating-linear-gradient(-45deg, #7f1d1d, #7f1d1d 20px, #450a0a 20px, #450a0a 40px);
+        animation: scrollBgDiag 2s linear infinite;
+        opacity: 0.95;
       }
 
-      /* HighLow Mode (Checkerboard) */
+      /* HighLow Mode (Dynamic Blue/Purple) */
       .bg-pattern-highlow {
-        background-color: #ef4444;
-        background-image: linear-gradient(45deg, #b91c1c 25%, transparent 25%, transparent 75%, #b91c1c 75%, #b91c1c), linear-gradient(45deg, #b91c1c 25%, transparent 25%, transparent 75%, #b91c1c 75%, #b91c1c);
+        background: linear-gradient(135deg, #1e3a8a, #4c1d95, #312e81);
+        background-size: 200% 200%;
+        animation: gradientShift 8s ease infinite;
+      }
+      .bg-pattern-highlow::after {
+        content: ""; position: absolute; inset: 0;
+        background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
         background-size: 40px 40px;
-        background-position: 0 0, 20px 20px;
-        animation: scrollBg 2.5s linear infinite;
       }
 
-      /* Celeb Mode (Diamonds / Gold accents) */
+      /* Celeb Mode (Luxury Black/Gold) */
       .bg-pattern-celeb {
-        background-color: #ef4444;
-        background-image: radial-gradient(circle at 15px 15px, #fbd38d 3px, transparent 4px), radial-gradient(circle at 45px 45px, #fbbf24 2px, transparent 3px);
+        background: radial-gradient(circle at center, #2e1005, #000000);
+      }
+      .bg-pattern-celeb::before {
+        content: ""; position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 15px 15px, rgba(251, 191, 36, 0.3) 2px, transparent 3px), radial-gradient(circle at 45px 45px, rgba(251, 191, 36, 0.15) 1px, transparent 2px);
         background-size: 60px 60px;
-        animation: scrollBgSlow 4s linear infinite;
+        animation: scrollBgSlow 5s linear infinite;
       }
+
+      @keyframes gradientShift {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+      @keyframes scrollBgDiag { 0% { background-position: 0 0; } 100% { background-position: 56.56px 56.56px; } }
+      @keyframes scrollBgSlow { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
       
-      /* Solid Panels & Borders */
-      .panel-border { border: 4px solid #450a0a; }
+      /* Panels & Cards - Glassmorphism */
       .panel {
-        background-color: white;
-        border: 4px solid #450a0a;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
         border-radius: 1.5rem;
-        box-shadow: 0 8px 0 #450a0a;
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
       }
-      .panel-inset { box-shadow: inset 0 4px 0 rgba(0,0,0,0.1); }
       
-      /* Solid Buttons */
+      /* Buttons */
       .btn-solid {
-        border: 4px solid #450a0a;
-        box-shadow: 0 6px 0 #450a0a;
-        transition: transform 0.1s, box-shadow 0.1s;
+        border: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        position: relative;
+        overflow: hidden;
+      }
+      .btn-solid::after {
+        content: ''; position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+        transform: skewX(-20deg);
+        transition: 0.5s;
+      }
+      .btn-solid:hover::after {
+        left: 150%;
+      }
+      .btn-solid:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.2);
       }
       .btn-solid:active:not(:disabled) {
-        transform: translateY(6px);
-        box-shadow: 0 0px 0 #450a0a;
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       }
-      .btn-solid:disabled { opacity: 0.6; cursor: not-allowed; }
-      
-      /* Text Strokes */
-      .text-stroke { text-shadow: -2px -2px 0 #450a0a, 2px -2px 0 #450a0a, -2px 2px 0 #450a0a, 2px 2px 0 #450a0a; }
-      .text-stroke-sm { text-shadow: -1px -1px 0 #450a0a, 1px -1px 0 #450a0a, -1px 1px 0 #450a0a, 1px 1px 0 #450a0a; }
+      .btn-solid:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
       
       /* Animations */
       @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -234,7 +247,7 @@ export default function App() {
       .animate-pulse-pop { animation: pulse-pop 2s infinite; }
 
       @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
+      .animate-fadeIn { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
       @keyframes float-up {
           0% { transform: translateY(0) scale(0.5); opacity: 0; }
@@ -245,9 +258,10 @@ export default function App() {
       .animate-float-up { animation: float-up 2.5s ease-out forwards; }
       
       /* Custom Scrollbar */
-      .custom-scrollbar::-webkit-scrollbar { width: 12px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: #fef2f2; border-left: 3px solid #450a0a; border-radius: 0 8px 8px 0;}
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #fca5a5; border: 3px solid #450a0a; border-radius: 8px; }
+      .custom-scrollbar::-webkit-scrollbar { width: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 8px;}
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 8px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
     `;
         document.head.appendChild(style);
         return () => document.head.removeChild(style);
@@ -259,7 +273,7 @@ export default function App() {
             id: Date.now() + Math.random(),
             senderId,
             emoji,
-            left: 10 + Math.random() * 70, // 10% ~ 80%のランダムなX座標
+            left: 10 + Math.random() * 70,
         };
         setActiveEmotes(prev => [...prev, newEmote]);
         setTimeout(() => {
@@ -334,7 +348,6 @@ export default function App() {
                     }));
                 } else if (data.type === 'EMOTE') {
                     addEmoteToScreen(conn.peer, data.emoji);
-                    // ホストから他の全員へ転送
                     hostConnectionsRef.current.forEach(c => {
                         if (c.peer !== conn.peer && c.open) {
                             c.send({ type: 'EMOTE', senderId: conn.peer, emoji: data.emoji });
@@ -390,7 +403,6 @@ export default function App() {
                     gameStateRef.current = data.state;
                 } else if (data.type === 'ROOM_CLOSED') {
                     isIntentionalClose = true;
-                    // リザルト画面で商品を見ている最中の場合は、いきなりタイトルに戻さず保護する
                     if (keepResultScreenRef.current) {
                         setHostDisconnected(true);
                     } else {
@@ -485,20 +497,17 @@ export default function App() {
         }
     };
 
-    // モックデータの生成
     const getMockProducts = (rounds, gameMode) => {
         const fallbackProducts = [
-            { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。口の中でとろける旨味をご堪能ください。特別な日のお祝いにも最適です。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1", "https://placehold.co/400x400/ef4444/white?text=Wagyu+2", "https://placehold.co/400x400/ef4444/white?text=Wagyu+3"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
-            { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。通勤や通学、テレワークなど様々なシーンで活躍します。耳にフィットする人間工学に基づいたデザインです。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1", "https://placehold.co/400x400/3b82f6/white?text=Earphone+2", "https://placehold.co/400x400/3b82f6/white?text=Earphone+3"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
-            { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど、様々な食感と味わいを楽しめます。大切な方への贈り物や、自分へのご褒美にいかがでしょうか。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1", "https://placehold.co/400x400/10b981/white?text=Matcha+2", "https://placehold.co/400x400/10b981/white?text=Matcha+3"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
+            { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+            { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+            { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
         ];
 
         let items = [];
         for (let i = 0; i < rounds; i++) {
             let item = { ...fallbackProducts[i % fallbackProducts.length] };
-            if (gameMode === 'celeb') {
-                item.price = item.price * 15; // セレブ風に価格を高くする
-            }
+            if (gameMode === 'celeb') item.price = item.price * 15;
             items.push(item);
         }
 
@@ -517,7 +526,6 @@ export default function App() {
         return items;
     };
 
-    // APIからの商品フェッチ
     const fetchProducts = async (genreId, rounds, keyword, gameMode) => {
         let rawItems = [];
         let isCeleb = gameMode === 'celeb';
@@ -726,7 +734,7 @@ export default function App() {
     };
 
     if (!peerReady) {
-        return <div className="flex flex-col justify-center items-center h-screen bg-[#ef4444] font-pop text-white gap-4"><Loader2 className="w-16 h-16 animate-spin" /><p className="font-black text-2xl text-stroke">通信準備中...</p></div>;
+        return <div className="flex flex-col justify-center items-center h-screen bg-slate-900 font-pop text-white gap-4"><Loader2 className="w-16 h-16 animate-spin text-red-500" /><p className="font-bold text-2xl tracking-widest">通信準備中...</p></div>;
     }
 
     return (
@@ -766,8 +774,8 @@ export default function App() {
                     {activeEmotes.map(emote => (
                         <div key={emote.id} className="fixed pointer-events-none z-50 animate-float-up flex flex-col items-center"
                             style={{ left: `${emote.left}%`, bottom: '120px' }}>
-                            <span className="text-5xl md:text-7xl drop-shadow-lg">{emote.emoji}</span>
-                            <span className="text-xs font-black bg-black bg-opacity-60 text-white px-2 py-1 rounded-full mt-1 border border-white/20 whitespace-nowrap">
+                            <span className="text-5xl md:text-7xl drop-shadow-2xl filter drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]">{emote.emoji}</span>
+                            <span className="text-xs font-bold bg-slate-900/80 backdrop-blur-sm text-white px-3 py-1 rounded-full mt-2 border border-white/20 whitespace-nowrap shadow-lg">
                                 {gameState.players[emote.senderId]?.name || '???'}
                             </span>
                         </div>
@@ -787,57 +795,77 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     const [tab, setTab] = useState('create');
 
     return (
-        <div className="flex flex-col items-center justify-center mt-12 space-y-8 animate-fadeIn pb-12">
-            <div className="animate-float text-center">
-                <h1 className="text-5xl md:text-7xl font-black text-white text-stroke flex items-center justify-center gap-2">
-                    <ShoppingCart className="w-12 h-12 md:w-16 md:h-16" strokeWidth={3} />
-                    楽天プライスゲッサー
+        <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-12">
+            <div className="animate-float text-center relative w-full">
+                {/* タイトル背景の後光エフェクト */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
+
+                <h1 className="text-5xl md:text-7xl lg:text-[4.5rem] font-black flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 tracking-tight leading-tight">
+                    {/* アイコン部分をリッチなバッジ風に */}
+                    <div className="bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-[0_10px_25px_rgba(0,0,0,0.4)] border border-yellow-200/60 transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
+                        <ShoppingCart className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-md" strokeWidth={2.5} />
+                    </div>
+                    {/* タイトル文字をゴールドグラデーション＋ドロップシャドウに */}
+                    <span
+                        className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-600 py-2"
+                        style={{ filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.6))' }}
+                    >
+                        楽天プライスゲッサー
+                    </span>
                 </h1>
-                <p className="text-xl md:text-2xl font-black text-yellow-300 text-stroke mt-4 tracking-widest">商品の値段をピッタリ当てろ！</p>
+
+                <div className="mt-6 flex items-center justify-center gap-3 md:gap-4 relative z-10">
+                    <div className="h-0.5 w-8 md:w-16 bg-gradient-to-r from-transparent to-yellow-300 rounded-full"></div>
+                    <p className="text-sm md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 tracking-[0.1em] md:tracking-[0.2em] whitespace-nowrap"
+                        style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
+                        あなたの金銭感覚、バグってない？
+                    </p>
+                    <div className="h-0.5 w-8 md:w-16 bg-gradient-to-l from-transparent to-yellow-300 rounded-full"></div>
+                </div>
             </div>
 
-            <div className="panel w-full max-w-2xl overflow-hidden flex flex-col">
+            <div className="panel w-full max-w-2xl overflow-hidden flex flex-col border-none bg-white/95 mt-4">
                 {/* Tabs */}
-                <div className="flex bg-red-100 border-b-4 border-[#450a0a]">
+                <div className="flex bg-slate-50 border-b border-slate-200">
                     <button
-                        className={`flex-1 py-4 text-xl font-black transition-colors ${tab === 'create' ? 'bg-white text-red-600' : 'text-red-900 hover:bg-red-200'} border-r-4 border-[#450a0a]`}
+                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'create' ? 'bg-white text-red-600 shadow-[0_2px_0_#ef4444_inset]' : 'text-slate-500 hover:bg-slate-100'} border-r border-slate-200`}
                         onClick={() => setTab('create')}>
                         部屋を作る
                     </button>
                     <button
-                        className={`flex-1 py-4 text-xl font-black transition-colors ${tab === 'join' ? 'bg-white text-red-600' : 'text-red-900 hover:bg-red-200'}`}
+                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'join' ? 'bg-white text-red-600 shadow-[0_2px_0_#ef4444_inset]' : 'text-slate-500 hover:bg-slate-100'}`}
                         onClick={() => setTab('join')}>
                         部屋に入る
                     </button>
                 </div>
 
-                <div className="p-8 flex flex-col md:flex-row gap-8 items-center bg-[#f8fafc]">
-                    <div className="w-32 h-32 rounded-full bg-yellow-300 panel-border flex items-center justify-center animate-pulse-pop shadow-[0_6px_0_#450a0a] shrink-0">
-                        <User className="w-16 h-16 text-[#450a0a]" />
+                <div className="p-8 flex flex-col md:flex-row gap-8 items-center">
+                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 shadow-xl flex items-center justify-center animate-pulse-pop shrink-0 border-4 border-white">
+                        <User className="w-14 h-14 text-white drop-shadow-md" />
                     </div>
 
                     <div className="flex-1 space-y-6 w-full">
                         {error && (
-                            <div className="bg-red-100 panel-border text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-[0_4px_0_#450a0a]">
-                                <AlertCircle className="w-6 h-6 shrink-0" /> {error}
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
+                                <AlertCircle className="w-5 h-5 shrink-0" /> {error}
                             </div>
                         )}
 
                         <div>
-                            <label className="block text-[#450a0a] font-black mb-2 text-lg">ニックネーム</label>
+                            <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ニックネーム</label>
                             <input
                                 type="text" maxLength={10} placeholder="名前を入力"
-                                className="w-full panel-border rounded-xl px-4 py-3 text-xl font-black focus:outline-none focus:bg-yellow-50 transition-colors shadow-[inset_0_4px_0_rgba(0,0,0,0.05)]"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition-all shadow-inner"
                                 value={playerName} onChange={(e) => setPlayerName(e.target.value)}
                             />
                         </div>
 
                         {tab === 'join' && (
                             <div className="animate-fadeIn">
-                                <label className="block text-[#450a0a] font-black mb-2 text-lg">ルームID</label>
+                                <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ルームID</label>
                                 <input
                                     type="text" maxLength={5} placeholder="英数字5文字"
-                                    className="w-full panel-border rounded-xl px-4 py-3 text-xl font-black uppercase tracking-widest text-center focus:outline-none focus:bg-yellow-50 transition-colors shadow-[inset_0_4px_0_rgba(0,0,0,0.05)]"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition-all shadow-inner"
                                     value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value)}
                                 />
                             </div>
@@ -846,65 +874,65 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                         <button
                             onClick={tab === 'create' ? handleCreateRoom : handleJoinRoom}
                             disabled={isLoading}
-                            className="w-full bg-green-500 hover:bg-green-400 text-white font-black py-4 rounded-xl text-2xl btn-solid flex justify-center items-center gap-2 mt-4"
+                            className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold py-4 rounded-xl text-xl btn-solid flex justify-center items-center gap-2 mt-2 shadow-lg"
                         >
-                            {isLoading ? <Loader2 className="w-8 h-8 animate-spin" /> : <><Play className="w-8 h-8 fill-current" /> {tab === 'create' ? '開始' : '参加'}</>}
+                            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Play className="w-6 h-6 fill-current" /> {tab === 'create' ? '開始する' : '参加する'}</>}
                         </button>
                     </div>
                 </div>
             </div>
 
             {/* 遊び方セクション */}
-            <div className="panel w-full max-w-2xl bg-[#f8fafc] p-6 md:p-8 mt-8">
-                <h2 className="text-2xl font-black text-[#450a0a] mb-6 flex items-center gap-2 border-b-4 border-dashed border-[#450a0a] pb-4">
-                    <Info className="w-8 h-8 text-blue-500" strokeWidth={3} /> このゲームの遊び方
+            <div className="panel w-full max-w-2xl p-6 md:p-8 mt-4 border-none bg-white/95">
+                <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                    <Info className="w-6 h-6 text-indigo-500" strokeWidth={2.5} /> このゲームの遊び方
                 </h2>
-                <div className="space-y-6">
-                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <div className="w-12 h-12 rounded-full bg-yellow-300 panel-border flex items-center justify-center font-black text-xl text-[#450a0a] shrink-0">1</div>
+                <div className="space-y-4">
+                    <div className="flex gap-4 items-start p-2">
+                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-indigo-200">1</div>
                         <div>
-                            <h3 className="font-black text-lg text-[#450a0a]">部屋を作って集まる</h3>
-                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
+                            <h3 className="font-bold text-slate-800">部屋を作って集まる</h3>
+                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
                         </div>
                     </div>
-                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <div className="w-12 h-12 rounded-full bg-red-400 panel-border flex items-center justify-center font-black text-xl text-white shrink-0">2</div>
+                    <div className="flex gap-4 items-start p-2">
+                        <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-rose-200">2</div>
                         <div>
-                            <h3 className="font-black text-lg text-[#450a0a]">商品の値段を予想する</h3>
-                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
+                            <h3 className="font-bold text-slate-800">商品の値段を予想する</h3>
+                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
                         </div>
                     </div>
-                    <div className="flex gap-4 items-start bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <div className="w-12 h-12 rounded-full bg-blue-400 panel-border flex items-center justify-center font-black text-xl text-white shrink-0">3</div>
+                    <div className="flex gap-4 items-start p-2">
+                        <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-amber-200">3</div>
                         <div>
-                            <h3 className="font-black text-lg text-[#450a0a]">結果発表＆スコア獲得</h3>
-                            <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
+                            <h3 className="font-bold text-slate-800">結果発表＆スコア獲得</h3>
+                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* モード紹介セクション */}
-            <div className="panel w-full max-w-2xl bg-orange-50 p-6 md:p-8 mt-8">
-                <h2 className="text-2xl font-black text-[#450a0a] mb-6 flex items-center gap-2 border-b-4 border-dashed border-[#450a0a] pb-4">
-                    <Trophy className="w-8 h-8 text-orange-500" strokeWidth={3} /> ゲームモードの紹介
+            <div className="panel w-full max-w-2xl bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8 mt-4 border border-white">
+                <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                    <Trophy className="w-6 h-6 text-amber-500" strokeWidth={2.5} /> ゲームモードの紹介
                 </h2>
-                <div className="space-y-4">
-                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <h3 className="font-black text-lg text-green-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
-                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
+                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
                     </div>
-                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <h3 className="font-black text-lg text-red-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
-                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
+                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
                     </div>
-                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <h3 className="font-black text-lg text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ローモード</h3>
-                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ロー</h3>
+                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
                     </div>
-                    <div className="bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
-                        <h3 className="font-black text-lg text-yellow-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
-                        <p className="text-gray-600 font-bold mt-1 text-sm leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
+                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                        <h3 className="font-bold text-amber-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
+                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
                     </div>
                 </div>
             </div>
@@ -932,90 +960,97 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
     const emptySlots = Array(Math.max(0, 14 - playersEntries.length)).fill(null);
 
     return (
-        <div className="flex flex-col items-center w-full mt-4 animate-fadeIn">
+        <div className="flex flex-col items-center w-full mt-4 animate-fadeIn pb-12">
             {/* Header Info */}
-            <div className="w-full flex flex-col md:flex-row justify-between items-center md:items-end mb-6 px-2 gap-4 animate-float">
-                <h2 className="text-4xl md:text-5xl font-black text-white text-stroke flex items-center gap-3 tracking-widest">
-                    <Settings className="w-10 h-10 md:w-12 md:h-12" /> LOBBY
+            <div className="w-full flex flex-col md:flex-row justify-between items-center mb-6 px-2 gap-4 animate-float relative">
+                {/* LOBBY文字の背景後光エフェクト */}
+                <div className="absolute top-1/2 left-1/2 md:left-24 -translate-x-1/2 md:translate-x-0 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl rounded-full pointer-events-none hidden md:block"></div>
+
+                <h2 className="text-4xl md:text-5xl font-black flex items-center gap-4 relative z-10 tracking-widest">
+                    <div className="bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 p-2 md:p-3 rounded-xl md:rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.4)] border border-yellow-200/60 transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
+                        <Settings className="w-8 h-8 md:w-10 md:h-10 text-white drop-shadow-md" strokeWidth={2.5} />
+                    </div>
+                    <span
+                        className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-600 py-2"
+                        style={{ filter: 'drop-shadow(0px 6px 10px rgba(0,0,0,0.6))' }}
+                    >
+                        LOBBY
+                    </span>
                 </h2>
-                <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+                <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end relative z-10">
                     <LeaveButton onLeave={handleLeaveRoom} />
-                    <div className="bg-white panel-border px-6 py-2 rounded-2xl flex items-center gap-4 shadow-[0_4px_0_#450a0a]">
-                        <span className="font-black text-2xl text-[#450a0a]">ID: <span className="tracking-widest">{roomId}</span></span>
+                    <div className="bg-white/90 backdrop-blur-md border border-white/50 px-6 py-2 rounded-2xl flex items-center gap-4 shadow-lg">
+                        <span className="font-bold text-xl text-slate-800">ID: <span className="tracking-widest ml-1">{roomId}</span></span>
                         <button
                             onClick={handleCopy}
-                            className={`p-2 rounded-xl panel-border transition-colors ${copied ? 'bg-green-500 text-white' : 'bg-yellow-300 hover:bg-yellow-400 text-[#450a0a]'}`}
+                            className={`p-2 rounded-xl transition-all shadow-sm ${copied ? 'bg-emerald-500 text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-600'}`}
                             title="ルームIDをコピー"
                         >
-                            {copied ? <Check strokeWidth={3} /> : <Copy strokeWidth={3} />}
+                            {copied ? <Check strokeWidth={2.5} size={20} /> : <Copy strokeWidth={2.5} size={20} />}
                         </button>
                     </div>
                 </div>
             </div>
 
-            <div className="panel w-full bg-[#f8fafc] overflow-hidden flex flex-col md:flex-row md:h-[600px]">
+            <div className="panel w-full bg-white/95 overflow-hidden flex flex-col md:flex-row md:h-[650px] p-1 gap-1">
                 {/* Left: Players */}
-                <div className="w-full md:w-1/3 flex flex-col border-b-4 md:border-b-0 md:border-r-4 border-[#450a0a] bg-white h-[350px] md:h-full">
-                    <div className="bg-purple-600 text-white font-black p-4 text-center border-b-4 border-[#450a0a] text-lg text-stroke-sm">
+                <div className="w-full md:w-1/3 flex flex-col bg-slate-50 rounded-xl border border-slate-100 overflow-hidden h-[350px] md:h-full">
+                    <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold p-4 text-center text-sm tracking-wider uppercase shadow-md relative z-10">
                         プレイヤー {playersEntries.length} / 14
                     </div>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#f1f5f9] custom-scrollbar panel-inset">
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
                         {playersEntries.map(([id, p]) => (
-                            <div key={id} className="bg-white rounded-2xl p-2 flex items-center gap-3 panel-border shadow-[0_4px_0_#450a0a]">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-black text-xl panel-border ${id === myPeerId ? 'bg-red-500' : 'bg-purple-500'}`}>
+                            <div key={id} className={`bg-white rounded-xl p-3 flex items-center gap-3 shadow-sm border border-slate-100 transition-all ${id === myPeerId ? 'ring-2 ring-indigo-400 ring-offset-2 scale-[1.02]' : 'hover:shadow-md'}`}>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner ${id === myPeerId ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-indigo-400 to-purple-500'}`}>
                                     {p.name.charAt(0)}
                                 </div>
-                                <span className="font-black text-lg flex-1 truncate text-[#450a0a]">{p.name}</span>
-                                {p.isHost && <Crown className="text-yellow-500 w-8 h-8 mr-2 fill-current" />}
+                                <span className="font-bold text-slate-800 flex-1 truncate">{p.name}</span>
+                                {p.isHost && <Crown className="text-amber-400 w-6 h-6 mr-1 drop-shadow-sm fill-current" />}
 
                                 {!p.isHost && isHost && (
                                     <button
                                         onClick={() => handleKickPlayer(id)}
-                                        className="bg-red-100 hover:bg-red-200 text-red-600 p-2 rounded-xl panel-border mr-2 transition-transform hover:scale-110 active:scale-95"
+                                        className="bg-rose-50 hover:bg-rose-100 text-rose-500 p-2 rounded-lg transition-transform hover:scale-110"
                                         title="このプレイヤーを退出させる"
                                     >
-                                        <X strokeWidth={3} size={20} />
+                                        <X strokeWidth={2.5} size={16} />
                                     </button>
                                 )}
                             </div>
                         ))}
                         {emptySlots.map((_, i) => (
-                            <div key={`empty-${i}`} className="bg-gray-100 rounded-2xl p-2 flex items-center gap-3 panel-border opacity-60">
-                                <div className="w-12 h-12 bg-gray-300 rounded-full flex items-center justify-center panel-border">
-                                    <User className="w-6 h-6 text-gray-500" />
+                            <div key={`empty-${i}`} className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 border border-slate-200 border-dashed opacity-60">
+                                <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center">
+                                    <User className="w-5 h-5 text-slate-400" />
                                 </div>
-                                <span className="font-black text-lg text-gray-400 flex-1">空</span>
+                                <span className="font-medium text-slate-400 flex-1">参加待ち...</span>
                             </div>
                         ))}
                     </div>
                 </div>
 
                 {/* Right: Settings */}
-                <div className="w-full md:w-2/3 flex flex-col bg-white md:h-full">
-                    <div className="bg-blue-600 text-white font-black p-4 text-center border-b-4 border-[#450a0a] text-lg text-stroke-sm">
-                        ゲーム設定
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#f8fafc] custom-scrollbar panel-inset">
-                        <SettingRow icon={<Crown size={28} strokeWidth={3} className="text-yellow-500" />} title="ゲームモード" desc="遊び方のルールを選択">
+                <div className="w-full md:w-2/3 flex flex-col bg-white rounded-xl h-full">
+                    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 custom-scrollbar">
+                        <SettingRow icon={<Crown size={24} strokeWidth={2.5} className="text-amber-500" />} title="ゲームモード" desc="遊び方のルールを選択">
                             <div className="flex flex-col gap-2">
-                                <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.gameMode} onChange={(e) => updateSetting('gameMode', e.target.value)}>
+                                <select disabled={!isHost} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800 transition-all shadow-inner appearance-none cursor-pointer" value={gameState.settings.gameMode} onChange={(e) => updateSetting('gameMode', e.target.value)}>
                                     <option value="normal">通常モード</option>
                                     <option value="dobon">ドボンモード</option>
                                     <option value="highlow">ハイ＆ローモード</option>
                                     <option value="celeb">セレブモード</option>
                                 </select>
-                                <div className="text-xs md:text-sm font-bold text-gray-600 bg-yellow-50 p-2 rounded-lg border-2 border-yellow-200 leading-snug">
-                                    {gameState.settings.gameMode === 'normal' && '💡 正解の金額に一番近い人が高得点！'}
-                                    {gameState.settings.gameMode === 'dobon' && '💡 1円でもオーバーするとドボンで0点！'}
-                                    {gameState.settings.gameMode === 'highlow' && '💡 基準価格より「高いか安いか」の2択！'}
-                                    {gameState.settings.gameMode === 'celeb' && '💡 5万円以上の高級品ばかりが登場！'}
+                                <div className="text-xs font-medium text-amber-700 bg-amber-50 p-3 rounded-xl border border-amber-100 leading-relaxed shadow-sm">
+                                    {gameState.settings.gameMode === 'normal' && '💡 正解の金額に一番近い人が高得点を獲得するスタンダードルール！'}
+                                    {gameState.settings.gameMode === 'dobon' && '💡 正解を1円でもオーバーするとドボンで0点！ギリギリを攻めろ！'}
+                                    {gameState.settings.gameMode === 'highlow' && '💡 基準価格より「高い」か「安い」かの2択！サクサク遊べます。'}
+                                    {gameState.settings.gameMode === 'celeb' && '💡 5万円以上の高級品ばかりが登場！金銭感覚を狂わせろ！'}
                                 </div>
                             </div>
                         </SettingRow>
 
-                        <SettingRow icon={<ShoppingCart size={28} strokeWidth={3} />} title="ジャンル" desc="出題される商品のカテゴリを選択">
-                            <select disabled={!isHost} className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a]" value={gameState.settings.genreId} onChange={(e) => updateSetting('genreId', e.target.value)}>
+                        <SettingRow icon={<ShoppingCart size={24} strokeWidth={2.5} className="text-emerald-500" />} title="出題ジャンル" desc="商品のカテゴリを絞り込みます">
+                            <select disabled={!isHost} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800 transition-all shadow-inner appearance-none cursor-pointer" value={gameState.settings.genreId} onChange={(e) => updateSetting('genreId', e.target.value)}>
                                 <option value="0">すべてのジャンル</option>
                                 <option value="100227">食品・スイーツ</option>
                                 <option value="100371">レディースファッション</option>
@@ -1029,60 +1064,60 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                             </select>
                         </SettingRow>
 
-                        <SettingRow icon={<LinkIcon size={28} strokeWidth={3} />} title="フリーワード" desc="好きなキーワードで絞り込み (オプション)">
-                            <input type="text" disabled={!isHost} placeholder="例: キャンプ, 家電" className="w-full panel-border rounded-xl px-4 py-3 font-black focus:outline-none bg-white text-[#450a0a] placeholder-gray-400" value={gameState.settings.keyword || ''} onChange={(e) => updateSetting('keyword', e.target.value)} />
+                        <SettingRow icon={<LinkIcon size={24} strokeWidth={2.5} className="text-blue-500" />} title="フリーワード" desc="好きなキーワードでさらに絞り込み (任意)">
+                            <input type="text" disabled={!isHost} placeholder="例: キャンプ, 最新家電" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 font-bold focus:outline-none focus:ring-2 focus:ring-indigo-400 text-slate-800 placeholder-slate-400 transition-all shadow-inner" value={gameState.settings.keyword || ''} onChange={(e) => updateSetting('keyword', e.target.value)} />
                         </SettingRow>
 
-                        <SettingRow icon={<CheckCircle2 size={28} strokeWidth={3} />} title="ラウンド数" desc="遊ぶ回数を選択">
+                        <SettingRow icon={<CheckCircle2 size={24} strokeWidth={2.5} className="text-rose-500" />} title="ラウンド数" desc="1ゲームの長さを選択">
                             <div className="flex gap-2">
                                 {[3, 4, 5].map(r => (
-                                    <button key={r} disabled={!isHost} onClick={() => updateSetting('rounds', r)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.rounds === r ? 'bg-blue-500 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>{r}回</button>
+                                    <button key={r} disabled={!isHost} onClick={() => updateSetting('rounds', r)} className={`flex-1 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${gameState.settings.rounds === r ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{r}回</button>
                                 ))}
                             </div>
                         </SettingRow>
 
-                        <SettingRow icon={<Clock size={28} strokeWidth={3} />} title="制限時間" desc="1ラウンドの予想時間">
+                        <SettingRow icon={<Clock size={24} strokeWidth={2.5} className="text-slate-600" />} title="制限時間" desc="1ラウンドあたりの予想時間">
                             <div className="grid grid-cols-4 gap-2">
                                 {[15, 30, 60, 0].map(t => (
-                                    <button key={t} disabled={!isHost} onClick={() => updateSetting('timeLimit', t)} className={`py-3 rounded-xl panel-border font-black text-sm md:text-base transition-colors ${gameState.settings.timeLimit === t ? 'bg-blue-500 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>{t === 0 ? '無制限' : `${t}秒`}</button>
+                                    <button key={t} disabled={!isHost} onClick={() => updateSetting('timeLimit', t)} className={`py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${gameState.settings.timeLimit === t ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md shadow-indigo-200' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{t === 0 ? '無制限' : `${t}秒`}</button>
                                 ))}
                             </div>
                         </SettingRow>
 
-                        <SettingRow icon={<Star size={28} strokeWidth={3} className="fill-yellow-400" />} title="最終ラウンドスコア2倍" desc="最後の問題は獲得スコアが2倍！">
+                        <SettingRow icon={<Star size={24} strokeWidth={2.5} className="text-amber-400 fill-current" />} title="最終ラウンドスコア2倍" desc="逆転のチャンスを作るかどうか">
                             <div className="flex gap-2">
-                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', true)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.doubleFinalRound ? 'bg-yellow-400 text-red-700 shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>ON</button>
-                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.doubleFinalRound ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', true)} className={`flex-1 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${gameState.settings.doubleFinalRound ? 'bg-gradient-to-r from-amber-400 to-amber-500 text-white shadow-md shadow-amber-200' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>ON</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('doubleFinalRound', false)} className={`flex-1 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${!gameState.settings.doubleFinalRound ? 'bg-slate-400 text-white shadow-md' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>OFF</button>
                             </div>
                         </SettingRow>
 
-                        <SettingRow icon={<Users size={28} strokeWidth={3} className="text-blue-500" />} title="入力金額の共有" desc="他の人が入力している金額をリアルタイムで表示">
+                        <SettingRow icon={<Users size={24} strokeWidth={2.5} className="text-cyan-500" />} title="入力金額の共有" desc="他の人の予想金額をリアルタイムでチラ見せ">
                             <div className="flex gap-2">
-                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', true)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${gameState.settings.showLiveGuess ? 'bg-blue-500 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>ON</button>
-                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', false)} className={`flex-1 py-3 rounded-xl panel-border font-black text-lg transition-colors ${!gameState.settings.showLiveGuess ? 'bg-gray-400 text-white shadow-[inset_0_4px_0_rgba(0,0,0,0.2)]' : 'bg-white text-gray-500 hover:bg-gray-50'}`}>OFF</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', true)} className={`flex-1 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${gameState.settings.showLiveGuess ? 'bg-gradient-to-r from-cyan-500 to-cyan-600 text-white shadow-md shadow-cyan-200' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>ON</button>
+                                <button disabled={!isHost} onClick={() => updateSetting('showLiveGuess', false)} className={`flex-1 py-2 md:py-3 rounded-xl font-bold text-sm md:text-base transition-all ${!gameState.settings.showLiveGuess ? 'bg-slate-400 text-white shadow-md' : 'bg-slate-50 border border-slate-200 text-slate-500 hover:bg-slate-100'}`}>OFF</button>
                             </div>
                         </SettingRow>
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 bg-gray-200 border-t-4 border-[#450a0a] flex items-center justify-end gap-4">
-                        {!isHost && <div className="text-[#450a0a] font-black mr-auto flex items-center gap-2 animate-pulse-pop"><Loader2 className="animate-spin" /> ホストの開始を待機中...</div>}
+                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 rounded-b-xl flex items-center justify-end gap-4 mt-auto">
+                        {!isHost && <div className="text-slate-600 font-bold mr-auto flex items-center gap-2 animate-pulse"><Loader2 className="animate-spin text-indigo-500 w-5 h-5" /> ホストの開始を待機中...</div>}
                         {isHost && (
                             productFetchError ? (
-                                <div className="flex flex-col md:flex-row gap-3 items-center w-full animate-fadeIn bg-red-100 p-3 rounded-xl panel-border border-red-400">
-                                    <span className="text-red-700 font-black text-sm md:text-base flex items-center gap-1 shrink-0"><AlertTriangle className="w-5 h-5" /> 商品取得に失敗</span>
-                                    <div className="flex gap-2 w-full md:ml-auto">
-                                        <button onClick={() => startGame(false)} disabled={isLoading} className="flex-1 md:flex-none bg-blue-500 hover:bg-blue-400 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm">
-                                            {isLoading ? <Loader2 className="animate-spin w-5 h-5" /> : <><RefreshCw className="w-4 h-4" />再試行</>}
+                                <div className="flex flex-col md:flex-row gap-3 items-center w-full animate-fadeIn bg-rose-50 p-3 rounded-xl border border-rose-200">
+                                    <span className="text-rose-600 font-bold text-sm flex items-center gap-1 shrink-0"><AlertTriangle className="w-5 h-5" /> 商品取得エラー</span>
+                                    <div className="flex gap-2 w-full md:ml-auto justify-end">
+                                        <button onClick={() => startGame(false)} disabled={isLoading} className="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-sm transition-all">
+                                            {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <><RefreshCw className="w-4 h-4" />再試行</>}
                                         </button>
-                                        <button onClick={() => startGame(true)} disabled={isLoading} className="flex-1 md:flex-none bg-gray-600 hover:bg-gray-500 text-white font-black py-2 px-4 rounded-xl btn-solid flex items-center justify-center gap-2 text-sm whitespace-nowrap">
+                                        <button onClick={() => startGame(true)} disabled={isLoading} className="bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 text-white font-bold py-2 px-4 rounded-xl flex items-center justify-center gap-2 text-sm shadow-md transition-all whitespace-nowrap">
                                             <Play className="w-4 h-4 fill-current" /> モックで開始
                                         </button>
                                     </div>
                                 </div>
                             ) : (
-                                <button onClick={() => startGame(false)} disabled={isLoading || Object.keys(gameState.players).length < 1} className="w-full md:w-auto bg-green-500 text-white font-black text-2xl py-3 px-12 rounded-xl btn-solid flex items-center justify-center gap-2">
-                                    {isLoading ? <Loader2 className="animate-spin w-8 h-8" /> : <><Play className="fill-current w-8 h-8" /> 開始</>}
+                                <button onClick={() => startGame(false)} disabled={isLoading || Object.keys(gameState.players).length < 1} className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-bold text-xl py-3 px-12 rounded-xl btn-solid flex items-center justify-center gap-2">
+                                    {isLoading ? <Loader2 className="animate-spin w-6 h-6" /> : <><Play className="fill-current w-6 h-6" /> ゲーム開始！</>}
                                 </button>
                             )
                         )}
@@ -1095,14 +1130,14 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
 
 function SettingRow({ icon, title, desc, children }) {
     return (
-        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors">
             <div className="flex items-center gap-4 w-full md:w-1/2">
-                <div className="bg-red-100 p-3 rounded-xl text-red-600 panel-border shrink-0">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm shrink-0">
                     {icon}
                 </div>
                 <div>
-                    <div className="font-black text-lg text-[#450a0a]">{title}</div>
-                    <div className="text-xs text-gray-500 font-bold">{desc}</div>
+                    <div className="font-bold text-slate-800">{title}</div>
+                    <div className="text-xs text-slate-500 font-medium mt-0.5">{desc}</div>
                 </div>
             </div>
             <div className="w-full md:w-1/2">
@@ -1192,12 +1227,12 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
     return (
         <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
             {showDoubleAnim && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-black/60 animate-fadeIn">
-                    <div className="bg-yellow-400 border-8 border-red-600 rounded-3xl p-8 md:p-12 transform -rotate-6 animate-pulse-pop shadow-[0_15px_0_#991b1b]">
-                        <h2 className="text-4xl md:text-6xl font-black text-red-600 text-center text-stroke-sm leading-tight">
+                <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+                    <div className="bg-gradient-to-br from-amber-400 to-yellow-500 border border-white/40 rounded-3xl p-8 md:p-12 transform -rotate-3 animate-pulse-pop shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        <h2 className="text-4xl md:text-5xl font-black text-rose-700 text-center drop-shadow-md leading-tight">
                             最終ラウンド！<br />
-                            <span className="text-6xl md:text-8xl text-white text-stroke block mt-4 transform rotate-3">
-                                獲得スコア2倍!!
+                            <span className="text-6xl md:text-8xl text-white block mt-4 transform rotate-2 drop-shadow-xl">
+                                スコア2倍!!
                             </span>
                         </h2>
                     </div>
@@ -1206,32 +1241,32 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
 
             {/* Header */}
             <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
-                <div className="bg-white panel-border text-[#450a0a] font-black text-xl px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] flex items-center">
-                    ラウンド <span className="text-red-600 text-3xl mx-1">{gameState.currentRound + 1}</span> / {gameState.settings.rounds}
+                <div className="bg-white/90 backdrop-blur-md border border-white/50 text-slate-800 font-bold text-lg md:text-xl px-6 py-2 rounded-full shadow-lg flex items-center">
+                    ラウンド <span className="text-indigo-600 text-2xl md:text-3xl font-black mx-2">{gameState.currentRound + 1}</span> <span className="text-slate-400">/ {gameState.settings.rounds}</span>
                     {gameState.settings.doubleFinalRound && isFinalRound && (
-                        <span className="bg-yellow-400 text-red-700 text-sm md:text-base px-2 py-1 rounded-lg ml-3 border-2 border-red-700 animate-pulse-pop shrink-0">スコア2倍!!</span>
+                        <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-xs md:text-sm px-3 py-1 rounded-full ml-3 font-black shadow-md animate-pulse-pop shrink-0">スコア2倍!!</span>
                     )}
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
                     <LeaveButton onLeave={handleLeaveRoom} />
-                    <div className={`panel-border font-black text-3xl flex items-center gap-2 bg-white px-6 py-2 rounded-full shadow-[0_4px_0_#450a0a] ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse text-red-600' : 'text-[#450a0a]'}`}>
-                        <Clock className="w-8 h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
+                    <div className={`backdrop-blur-md border border-white/50 font-black text-2xl md:text-3xl flex items-center gap-2 px-6 py-2 rounded-full shadow-lg transition-colors ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse bg-rose-50 text-rose-600' : 'bg-white/90 text-slate-800'}`}>
+                        <Clock className="w-6 h-6 md:w-8 md:h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
                     </div>
                 </div>
             </div>
 
-            <div className="panel w-full bg-[#f8fafc] p-4 md:p-6 flex flex-col gap-6">
+            <div className="panel w-full p-4 md:p-6 flex flex-col gap-6">
                 {/* Image & Title Container */}
-                <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a]">
+                <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                     {/* Images */}
                     <div className="w-full md:w-1/2 flex flex-col items-center gap-4">
-                        <div className="w-full aspect-square bg-gray-100 rounded-2xl panel-border flex items-center justify-center overflow-hidden p-2 relative panel-inset">
-                            <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain animate-fadeIn" />
+                        <div className="w-full aspect-square bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden p-4 relative shadow-inner border border-slate-100">
+                            <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain drop-shadow-md animate-fadeIn" />
                         </div>
                         {displayImages.length > 1 && (
                             <div className="flex gap-3 w-full justify-center">
                                 {displayImages.map((img, i) => (
-                                    <button key={i} onClick={() => setSelectedImageIndex(i)} className={`w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden panel-border transition-transform hover:-translate-y-1 ${selectedImageIndex === i ? 'border-red-500 shadow-[0_4px_0_#ef4444]' : 'bg-gray-100'}`}>
+                                    <button key={i} onClick={() => setSelectedImageIndex(i)} className={`w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-white transition-all hover:-translate-y-1 ${selectedImageIndex === i ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-md' : 'border border-slate-200 opacity-70 hover:opacity-100'}`}>
                                         <img src={img} className="w-full h-full object-cover" />
                                     </button>
                                 ))}
@@ -1239,68 +1274,71 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                         )}
                         <div className="flex flex-wrap gap-2 justify-center">
                             {currentProduct.tags.map((tag, i) => (
-                                <span key={i} className="bg-red-100 text-red-800 text-xs font-black px-2 py-1 rounded-md panel-border">{tag}</span>
+                                <span key={i} className="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-bold px-3 py-1 rounded-full shadow-sm">{tag}</span>
                             ))}
                         </div>
                     </div>
 
                     {/* Info */}
                     <div className="w-full md:w-1/2 flex flex-col gap-4">
-                        <h3 className="text-xl md:text-2xl font-black leading-snug text-[#450a0a] bg-yellow-100 p-4 rounded-2xl panel-border">{currentProduct.name}</h3>
+                        <h3 className="text-xl md:text-2xl font-bold leading-relaxed text-slate-800 bg-gradient-to-r from-slate-50 to-white p-4 rounded-xl shadow-sm border border-slate-100">{currentProduct.name}</h3>
                         {currentProduct.reviewCount > 0 && (
-                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl panel-border w-max shadow-[0_4px_0_#450a0a]">
-                                <Star className="w-6 h-6 fill-yellow-400 text-yellow-500" />
-                                <span className="text-xl font-black text-[#450a0a]">{currentProduct.reviewAverage}</span>
-                                <span className="text-gray-500 text-sm font-bold">({currentProduct.reviewCount.toLocaleString()})</span>
+                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 w-max shadow-sm">
+                                <Star className="w-5 h-5 text-amber-400 fill-current" />
+                                <span className="text-lg font-black text-slate-800">{currentProduct.reviewAverage}</span>
+                                <span className="text-slate-400 text-sm font-medium">({currentProduct.reviewCount.toLocaleString()})</span>
                             </div>
                         )}
-                        <div className="flex-1 bg-gray-50 p-4 rounded-2xl panel-border overflow-y-auto custom-scrollbar text-sm font-bold text-gray-700 max-h-48 md:max-h-80 panel-inset whitespace-pre-wrap leading-relaxed">
+                        <div className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 overflow-y-auto custom-scrollbar text-sm font-medium text-slate-600 max-h-48 md:max-h-80 shadow-inner whitespace-pre-wrap leading-relaxed">
                             {currentProduct.description}
                         </div>
                     </div>
                 </div>
 
                 {/* Input Area */}
-                <div className="w-full bg-[#450a0a] p-4 md:p-6 rounded-3xl panel-border shadow-[0_8px_0_#270606] flex flex-col justify-center">
+                <div className="w-full bg-gradient-to-br from-slate-800 to-slate-900 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col justify-center border border-slate-700 relative overflow-hidden">
+                    {/* Decorative Glow */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+
                     {me?.hasGuessed ? (
-                        <div className="text-center py-4 text-white animate-pulse-pop">
-                            <CheckCircle2 className="w-16 h-16 text-green-400 mx-auto mb-2" />
-                            <h3 className="text-3xl font-black text-stroke-sm">予想完了！</h3>
-                            <p className="font-bold mt-2 text-red-200">
+                        <div className="text-center py-6 text-white relative z-10 animate-fadeIn">
+                            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-3 drop-shadow-md" />
+                            <h3 className="text-3xl font-black drop-shadow-md">予想完了！</h3>
+                            <p className="font-medium mt-3 text-slate-300">
                                 {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
                             </p>
                         </div>
                     ) : isHighLow ? (
-                        <div className="flex flex-col items-center gap-4 w-full">
-                            <div className="text-xl md:text-2xl font-black text-white text-stroke-sm mb-2 text-center">
-                                実際の価格は、基準価格 <span className="text-yellow-300 text-3xl md:text-4xl bg-black/30 px-3 py-1 rounded-xl">¥{currentProduct.basePrice.toLocaleString()}</span> より...
+                        <div className="flex flex-col items-center gap-6 w-full relative z-10">
+                            <div className="text-lg md:text-xl font-bold text-slate-300 mb-2 text-center">
+                                実際の価格は、基準価格 <span className="text-amber-400 font-black text-3xl md:text-4xl mx-2 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">¥{currentProduct.basePrice.toLocaleString()}</span> より...
                             </div>
-                            <div className="flex w-full gap-4 md:gap-8">
+                            <div className="flex w-full gap-4 md:gap-8 max-w-xl mx-auto">
                                 <button
                                     onClick={() => submitGuess('high')}
                                     disabled={me?.hasGuessed}
-                                    className="flex-1 bg-red-500 hover:bg-red-400 text-white font-black py-4 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
                                 >
                                     <ArrowUpCircle size={32} /> 高い
                                 </button>
                                 <button
                                     onClick={() => submitGuess('low')}
                                     disabled={me?.hasGuessed}
-                                    className="flex-1 bg-blue-500 hover:bg-blue-400 text-white font-black py-4 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid disabled:opacity-50 flex items-center justify-center gap-2"
+                                    className="flex-1 bg-gradient-to-b from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
                                 >
                                     <ArrowDownCircle size={32} /> 安い
                                 </button>
                             </div>
                         </div>
                     ) : (
-                        <form onSubmit={onSubmit} className="flex flex-col md:flex-row items-center gap-4 w-full">
-                            <div className="flex items-center gap-3 flex-1 w-full bg-white rounded-2xl panel-border px-4 py-2 shadow-[inset_0_4px_0_rgba(0,0,0,0.1)]">
-                                <span className="text-4xl font-black text-red-500">¥</span>
+                        <form onSubmit={onSubmit} className="flex flex-col md:flex-row items-center gap-4 w-full relative z-10 max-w-3xl mx-auto">
+                            <div className="flex items-center gap-3 flex-1 w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 px-6 py-4 shadow-inner">
+                                <span className="text-3xl md:text-4xl font-black text-amber-400 drop-shadow-md">¥</span>
                                 <input
                                     ref={inputRef}
                                     type="number" autoFocus placeholder="ズバリ、いくら？"
                                     min="0"
-                                    className="flex-1 w-full bg-transparent text-3xl md:text-4xl font-black text-[#450a0a] focus:outline-none text-right py-2 placeholder-gray-300"
+                                    className="flex-1 w-full bg-transparent text-3xl md:text-4xl font-bold text-white focus:outline-none text-right py-2 placeholder-white/30"
                                     value={guessInput}
                                     onChange={(e) => {
                                         const val = e.target.value;
@@ -1310,7 +1348,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                             </div>
                             <button
                                 type="submit" disabled={!guessInput}
-                                className="w-full md:w-auto bg-green-500 hover:bg-green-400 text-white font-black py-4 px-12 rounded-2xl text-2xl btn-solid disabled:opacity-50 whitespace-nowrap"
+                                className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black py-5 px-12 rounded-2xl text-2xl btn-solid shadow-lg whitespace-nowrap"
                             >決定！</button>
                         </form>
                     )}
@@ -1318,17 +1356,17 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
 
                 {/* Live Guess Area */}
                 {gameState.settings.showLiveGuess && !isHighLow && (
-                    <div className="w-full bg-white p-4 rounded-2xl panel-border shadow-[0_4px_0_#450a0a] mt-2 animate-fadeIn">
-                        <h4 className="font-black text-[#450a0a] mb-3 flex items-center gap-2"><Users size={20} /> みんなの入力状況</h4>
-                        <div className="flex flex-wrap gap-2">
+                    <div className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mt-2 animate-fadeIn">
+                        <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider"><Users size={18} className="text-indigo-500" /> みんなの入力状況</h4>
+                        <div className="flex flex-wrap gap-3">
                             {Object.entries(gameState.players).map(([id, p]) => (
-                                <div key={id} className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 ${p.hasGuessed ? 'bg-green-100 border-green-500' : 'bg-gray-50 border-gray-300'} ${id === myPeerId ? 'border-red-400 bg-red-50 shadow-[inset_0_2px_0_rgba(0,0,0,0.1)]' : ''}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black text-white ${id === myPeerId ? 'bg-red-500' : 'bg-purple-500'}`}>
+                                <div key={id} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${p.hasGuessed ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'} ${id === myPeerId ? 'ring-2 ring-indigo-300 ring-offset-1' : ''}`}>
+                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${id === myPeerId ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-indigo-400 to-purple-500'}`}>
                                         {p.name.charAt(0)}
                                     </div>
-                                    <span className="font-bold text-sm text-gray-700">{p.name}</span>
-                                    <span className={`font-black ml-2 ${p.hasGuessed ? 'text-green-600' : 'text-blue-600'}`}>
-                                        {p.hasGuessed ? `¥${Number(p.currentGuess).toLocaleString()}!` : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}?` : '考え中...')}
+                                    <span className="font-bold text-sm text-slate-700">{p.name}</span>
+                                    <span className={`font-black ml-1 ${p.hasGuessed ? 'text-emerald-600' : 'text-indigo-600'}`}>
+                                        {p.hasGuessed ? `¥${Number(p.currentGuess).toLocaleString()}!` : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}?` : <span className="text-slate-400 text-sm">考え中...</span>)}
                                     </span>
                                 </div>
                             ))}
@@ -1353,27 +1391,29 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
             </div>
             <div className="animate-float z-10 -mb-6 flex flex-col items-center">
                 {gameState.settings.doubleFinalRound && isFinalRound && (
-                    <div className="bg-yellow-400 text-red-700 font-black text-2xl md:text-4xl px-8 py-2 rounded-full border-4 border-red-700 mb-4 transform rotate-2 animate-pulse-pop shadow-[0_4px_0_#b91c1c]">
+                    <div className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white font-black text-xl md:text-3xl px-8 py-2 rounded-full shadow-lg mb-4 transform rotate-2 animate-pulse-pop border border-white/50">
                         🔥 最終ラウンド 獲得スコア2倍!! 🔥
                     </div>
                 )}
-                <h2 className="text-5xl md:text-6xl font-black text-white text-stroke transform -rotate-2 tracking-widest">
+                <h2 className="text-5xl md:text-6xl font-black text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)] transform -rotate-2 tracking-widest">
                     正解発表！
                 </h2>
             </div>
 
-            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4">
-                <div className="absolute top-0 left-0 w-full h-4 bg-gradient-to-r from-red-500 via-yellow-400 to-red-500"></div>
+            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4 overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500"></div>
 
                 {isHighLow && (
-                    <div className="text-xl font-black text-gray-500 mb-2">基準価格: ¥{currentProduct.basePrice.toLocaleString()}</div>
+                    <div className="text-lg font-bold text-slate-500 mb-3 bg-slate-50 px-4 py-1 rounded-full border border-slate-100">
+                        基準価格: <span className="text-slate-800">¥{currentProduct.basePrice.toLocaleString()}</span>
+                    </div>
                 )}
 
-                <img src={currentProduct.image} className="w-48 h-48 md:w-64 md:h-64 object-contain mb-6 panel-border rounded-2xl bg-gray-50 shadow-[0_4px_0_#450a0a] p-2" />
-                <h3 className="text-xl md:text-2xl font-black mb-2 text-[#450a0a] leading-snug">{currentProduct.name}</h3>
-                <p className="text-gray-500 font-bold mt-2">気になる正解は...</p>
+                <img src={currentProduct.image} className="w-48 h-48 md:w-64 md:h-64 object-contain mb-6 bg-slate-50 rounded-2xl shadow-inner border border-slate-100 p-4" />
+                <h3 className="text-xl md:text-2xl font-bold mb-2 text-slate-800 leading-relaxed">{currentProduct.name}</h3>
+                <p className="text-slate-400 font-medium mt-2 text-sm uppercase tracking-wider">気になる正解は...</p>
 
-                <div className="text-6xl md:text-7xl font-black text-red-600 my-6 text-stroke-sm bg-yellow-100 px-8 py-4 rounded-3xl panel-border shadow-[0_6px_0_#450a0a] animate-pulse-pop">
+                <div className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-rose-500 to-red-700 my-6 drop-shadow-sm animate-pulse-pop">
                     ¥{currentProduct.price.toLocaleString()}
                 </div>
             </div>
@@ -1392,31 +1432,32 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                     }
 
                     return (
-                        <div key={id} className={`flex items-center gap-4 bg-white rounded-2xl p-4 panel-border ${id === myPeerId ? 'shadow-[0_6px_0_#ef4444] border-red-500' : 'shadow-[0_6px_0_#450a0a]'}`}>
-                            <div className="w-10 text-center font-black text-gray-400 text-2xl">{index + 1}</div>
+                        <div key={id} className={`flex items-center gap-4 bg-white rounded-2xl p-5 transition-all ${id === myPeerId ? 'shadow-lg border-2 border-indigo-400 transform scale-[1.02]' : 'shadow-sm border border-slate-100'}`}>
+                            <div className="w-10 text-center font-black text-slate-300 text-2xl">{index + 1}</div>
                             <div className="flex-1">
-                                <div className="font-black text-xl text-[#450a0a]">{p.name}</div>
-                                <div className="text-sm text-gray-600 font-bold mt-1">
-                                    予想: <span className={`text-lg ${p.isDobon ? 'text-gray-400 line-through' : 'text-red-600'}`}>{guessDisplay}</span>
-                                    {diffDisplay && <span className="ml-2 text-xs bg-gray-200 px-2 py-1 rounded">{diffDisplay}</span>}
-                                    {p.isDobon && <span className="ml-2 text-xs bg-red-600 text-white px-2 py-1 rounded shadow-[0_2px_0_#7f1d1d] animate-pulse-pop inline-block">ドボン!!</span>}
+                                <div className="font-bold text-xl text-slate-800">{p.name}</div>
+                                <div className="text-sm text-slate-500 font-medium mt-1.5 flex flex-wrap items-center gap-2">
+                                    <span>予想:</span>
+                                    <span className={`text-lg font-bold ${p.isDobon ? 'text-slate-400 line-through' : 'text-indigo-600'}`}>{guessDisplay}</span>
+                                    {diffDisplay && <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-md border border-slate-200">{diffDisplay}</span>}
+                                    {p.isDobon && <span className="text-xs bg-gradient-to-r from-rose-500 to-red-600 text-white px-2 py-1 rounded-md shadow-sm font-bold animate-pulse-pop">ドボン!!</span>}
                                     {isHighLow && p.hasGuessed && (
-                                        <span className={`ml-2 text-xs px-2 py-1 rounded font-black text-white ${p.lastPoints > 0 ? 'bg-green-500' : 'bg-gray-400'}`}>
+                                        <span className={`text-xs px-2 py-1 rounded-md font-bold text-white shadow-sm ${p.lastPoints > 0 ? 'bg-gradient-to-r from-emerald-400 to-green-500' : 'bg-slate-400'}`}>
                                             {p.lastPoints > 0 ? '正解！' : '不正解...'}
                                         </span>
                                     )}
                                 </div>
                             </div>
                             <div className="text-right flex flex-col items-end">
-                                <div className="font-black text-3xl text-green-500 text-stroke-sm">+{p.lastPoints}</div>
-                                <div className="text-xs font-bold text-gray-400 mt-1 mb-1">獲得スコア</div>
-                                <div className="text-sm font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-md border-2 border-blue-200">累計: {p.score}</div>
+                                <div className="font-black text-3xl text-transparent bg-clip-text bg-gradient-to-br from-emerald-400 to-green-600 drop-shadow-sm">+{p.lastPoints}</div>
+                                <div className="text-[10px] font-bold text-slate-400 mt-1 mb-1.5 uppercase tracking-wider">獲得スコア</div>
+                                <div className="text-xs font-bold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100 shadow-sm">累計: {p.score}</div>
                             </div>
                         </div>
                     );
                 })}
             </div>
-            <p className="mt-12 font-black text-white text-xl animate-pulse text-stroke">次のラウンドへ進みます...</p>
+            <p className="mt-12 font-bold text-white/80 text-xl animate-pulse tracking-widest">次のラウンドへ進みます...</p>
         </div>
     );
 }
@@ -1424,53 +1465,62 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
 function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDisconnected }) {
     const sortedPlayers = Object.entries(gameState.players).sort((a, b) => b[1].score - a[1].score);
 
+    const rankColors = [
+        'bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-600 text-white shadow-lg shadow-yellow-500/40 border border-yellow-200',
+        'bg-gradient-to-br from-slate-300 via-slate-400 to-slate-500 text-white shadow-lg shadow-slate-400/40 border border-slate-200',
+        'bg-gradient-to-br from-orange-300 via-orange-400 to-orange-600 text-white shadow-lg shadow-orange-500/40 border border-orange-200',
+        'bg-slate-100 text-slate-400 border border-slate-200'
+    ];
+
     return (
         <div className="mt-8 flex flex-col items-center pb-32 animate-fadeIn">
-            <div className="animate-float z-10 -mb-6">
-                <h2 className="text-6xl font-black text-yellow-300 text-stroke mb-8 flex items-center gap-3 transform -rotate-2">
-                    <Trophy className="w-16 h-16 fill-current" /> 最終結果
+            <div className="animate-float z-10 -mb-8">
+                <h2 className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-500 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] mb-8 flex items-center gap-4 transform -rotate-2">
+                    <Trophy className="w-16 h-16 md:w-20 md:h-20 text-yellow-400 drop-shadow-lg" /> 最終結果
                 </h2>
             </div>
 
-            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white panel p-6 md:p-8 pt-12 mt-4">
+            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white/95 panel p-6 md:p-10 pt-16 mt-4 border-none">
                 {sortedPlayers.map(([id, p], index) => (
-                    <div key={id} className={`flex items-center gap-6 bg-white rounded-2xl p-4 md:p-6 panel-border ${index === 0 ? 'bg-yellow-50 shadow-[0_6px_0_#eab308] border-yellow-500 transform scale-[1.02] z-10 animate-pulse-pop' : 'shadow-[0_4px_0_#450a0a]'}`}>
-                        <div className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full font-black text-3xl text-white panel-border ${index === 0 ? 'bg-yellow-500' : index === 1 ? 'bg-gray-400' : index === 2 ? 'bg-amber-600' : 'bg-gray-300'}`}>
+                    <div key={id} className={`flex items-center gap-6 bg-white rounded-2xl p-5 md:p-6 transition-all ${index === 0 ? 'shadow-xl border border-yellow-200 transform scale-[1.03] z-10 animate-pulse-pop bg-gradient-to-r from-yellow-50/50 to-white' : 'shadow-sm border border-slate-100'}`}>
+                        <div className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full font-black text-2xl md:text-3xl ${rankColors[index] || rankColors[3]}`}>
                             {index + 1}
                         </div>
-                        <div className="flex-1 text-2xl md:text-3xl font-black text-[#450a0a]">{p.name}</div>
+                        <div className="flex-1 text-2xl md:text-3xl font-bold text-slate-800">{p.name}</div>
                         <div className="text-right">
-                            <div className="text-4xl md:text-5xl font-black text-red-500 text-stroke-sm">{p.score}</div>
-                            <div className="text-sm font-bold text-gray-500">トータルスコア</div>
+                            <div className={`text-4xl md:text-5xl font-black text-transparent bg-clip-text ${index === 0 ? 'bg-gradient-to-br from-rose-500 to-red-600' : 'bg-gradient-to-br from-slate-600 to-slate-800'} drop-shadow-sm`}>{p.score}</div>
+                            <div className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wider">トータルスコア</div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="w-full max-w-3xl panel bg-[#f8fafc] p-6 md:p-8">
-                <h3 className="text-2xl font-black text-[#450a0a] mb-6 text-center border-b-4 border-[#450a0a] pb-4 border-dashed">登場した商品</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="panel w-full max-w-3xl bg-slate-50/95 p-6 md:p-8 border-none">
+                <h3 className="text-xl font-black text-slate-800 mb-6 text-center border-b border-slate-200 pb-4">登場した商品</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {gameState.products.map((prod, i) => (
-                        <div key={i} className="bg-white rounded-2xl p-4 flex flex-col gap-3 panel-border shadow-[0_4px_0_#450a0a] transition-transform hover:-translate-y-1">
+                        <div key={i} className="bg-white rounded-2xl p-5 flex flex-col gap-4 shadow-sm border border-slate-100 transition-transform hover:-translate-y-1 hover:shadow-md group">
                             <div className="flex gap-4">
-                                <img src={prod.image} className="w-24 h-24 object-contain rounded-xl panel-border p-1 bg-gray-50 shrink-0" />
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-black text-sm line-clamp-2 leading-tight text-[#450a0a]">{prod.name}</h4>
+                                <div className="w-24 h-24 bg-slate-50 rounded-xl flex items-center justify-center shrink-0 border border-slate-100 p-2">
+                                    <img src={prod.image} className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                                </div>
+                                <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                    <h4 className="font-bold text-sm line-clamp-2 leading-snug text-slate-700 group-hover:text-indigo-600 transition-colors">{prod.name}</h4>
                                     {prod.reviewCount > 0 && (
-                                        <div className="flex items-center gap-1 text-yellow-500 text-xs font-bold mt-1">
+                                        <div className="flex items-center gap-1 text-amber-500 text-xs font-bold mt-1.5">
                                             <Star className="w-4 h-4 fill-current" />
                                             <span>{prod.reviewAverage}</span>
-                                            <span className="text-gray-400 font-normal">({prod.reviewCount.toLocaleString()})</span>
+                                            <span className="text-slate-400 font-medium ml-1">({prod.reviewCount.toLocaleString()})</span>
                                         </div>
                                     )}
-                                    <p className="text-red-600 font-black mt-1 text-lg">¥{prod.price.toLocaleString()}</p>
+                                    <p className="text-rose-600 font-black mt-2 text-lg">¥{prod.price.toLocaleString()}</p>
                                 </div>
                             </div>
                             <a
                                 href={prod.url} target="_blank" rel="noopener noreferrer"
-                                className="w-full bg-orange-100 hover:bg-orange-200 text-orange-700 font-black py-3 rounded-xl flex justify-center items-center gap-2 panel-border btn-solid mt-2"
+                                className="w-full bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 text-indigo-600 font-bold py-3 rounded-xl flex justify-center items-center gap-2 transition-all text-sm"
                             >
-                                <LinkIcon strokeWidth={3} /> 楽天市場で見る
+                                <LinkIcon strokeWidth={2.5} size={18} /> 楽天市場で見る
                             </a>
                         </div>
                     ))}
@@ -1483,24 +1533,23 @@ function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDis
                     {!hostDisconnected && (
                         <button
                             onClick={handleReturnToLobby}
-                            className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-black py-4 px-6 rounded-2xl text-xl btn-solid shadow-[0_6px_0_#1e3a8a] flex items-center justify-center gap-2"
+                            className="flex-1 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white font-bold py-4 px-6 rounded-2xl text-lg md:text-xl btn-solid shadow-lg flex items-center justify-center gap-3"
                         >
-                            <Users strokeWidth={3} /> ロビーへ戻る
+                            <Users strokeWidth={2.5} /> ロビーへ戻る
                         </button>
                     )}
                     <button
                         onClick={handleLeaveRoom}
-                        className="flex-1 bg-[#450a0a] hover:bg-[#270606] text-white font-black py-4 px-6 rounded-2xl text-xl btn-solid shadow-[0_6px_0_#000] flex items-center justify-center gap-2"
+                        className="flex-1 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-600 hover:to-slate-700 text-white font-bold py-4 px-6 rounded-2xl text-lg md:text-xl btn-solid shadow-lg flex items-center justify-center gap-3"
                     >
-                        <Home strokeWidth={3} /> タイトルへ戻る
+                        <Home strokeWidth={2.5} /> タイトルへ戻る
                     </button>
                 </div>
 
-                {/* ゲストへの保護通知メッセージ */}
                 {hostDisconnected && (
-                    <div className="font-bold text-red-700 bg-red-100 px-6 py-4 rounded-xl border-2 border-red-300 shadow-[0_4px_0_#b91c1c] text-center w-full max-w-lg animate-pulse-pop flex flex-col gap-2">
-                        <AlertTriangle className="w-8 h-8 mx-auto" strokeWidth={3} />
-                        <p>ホストが退出したため、ロビーには戻れません。<br />商品の確認が終わったらタイトルへ戻ってください。</p>
+                    <div className="font-bold text-rose-700 bg-rose-50 px-6 py-4 rounded-xl border border-rose-200 shadow-sm text-center w-full max-w-lg animate-pulse-pop flex flex-col gap-2 mt-4">
+                        <AlertTriangle className="w-8 h-8 mx-auto" strokeWidth={2.5} />
+                        <p className="text-sm">ホストが退出したため、ロビーには戻れません。<br />商品の確認が終わったらタイトルへ戻ってください。</p>
                     </div>
                 )}
             </div>
@@ -1522,9 +1571,9 @@ function LeaveButton({ onLeave }) {
         return (
             <button
                 onClick={onLeave}
-                className="bg-red-600 hover:bg-red-700 text-white font-black px-4 py-2 rounded-xl panel-border shadow-[0_4px_0_#450a0a] flex items-center gap-2 animate-pulse-pop shrink-0"
+                className="bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold px-4 py-2 rounded-xl shadow-md flex items-center gap-2 animate-pulse-pop shrink-0 transition-all border border-red-400"
             >
-                <LogOut size={20} strokeWidth={3} /> 退出する！
+                <LogOut size={20} strokeWidth={2.5} /> 退出する！
             </button>
         );
     }
@@ -1532,9 +1581,9 @@ function LeaveButton({ onLeave }) {
     return (
         <button
             onClick={() => setConfirming(true)}
-            className="bg-gray-200 hover:bg-gray-300 text-[#450a0a] font-black px-4 py-2 rounded-xl panel-border shadow-[0_4px_0_#450a0a] flex items-center gap-2 transition-colors shrink-0"
+            className="bg-white/80 hover:bg-white text-slate-600 font-bold px-4 py-2 rounded-xl shadow-sm border border-white/50 flex items-center gap-2 transition-all shrink-0 backdrop-blur-sm"
         >
-            <LogOut size={20} strokeWidth={3} /> 退出
+            <LogOut size={20} strokeWidth={2.5} /> 退出
         </button>
     );
 }
@@ -1546,9 +1595,9 @@ function EmoteMenu({ onEmote }) {
     return (
         <div className="fixed bottom-6 right-6 z-40 flex flex-col items-center gap-3">
             {isOpen && (
-                <div className="flex flex-col gap-2 bg-white/90 p-2 rounded-full panel-border shadow-[0_4px_0_#450a0a] animate-fadeIn backdrop-blur-sm">
+                <div className="flex flex-col gap-2 bg-white/90 p-2 rounded-full border border-slate-200 shadow-xl animate-fadeIn backdrop-blur-md">
                     {emojis.map(e => (
-                        <button key={e} onClick={() => { onEmote(e); setIsOpen(false); }} className="text-3xl w-12 h-12 flex items-center justify-center hover:scale-125 transition-transform hover:bg-gray-100 rounded-full">
+                        <button key={e} onClick={() => { onEmote(e); setIsOpen(false); }} className="text-3xl w-12 h-12 flex items-center justify-center hover:scale-125 transition-transform hover:bg-slate-100 rounded-full">
                             {e}
                         </button>
                     ))}
@@ -1556,9 +1605,9 @@ function EmoteMenu({ onEmote }) {
             )}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-16 h-16 rounded-full flex items-center justify-center panel-border shadow-[0_4px_0_#450a0a] transition-all hover:scale-105 ${isOpen ? 'bg-gray-200 text-[#450a0a]' : 'bg-yellow-400 text-white'}`}
+                className={`w-16 h-16 rounded-full flex items-center justify-center shadow-xl transition-all hover:scale-105 border-2 border-white/50 ${isOpen ? 'bg-slate-100 text-slate-600' : 'bg-gradient-to-br from-amber-300 to-yellow-500 text-white'}`}
             >
-                {isOpen ? <X size={32} strokeWidth={3} /> : <MessageCircle size={32} fill="currentColor" strokeWidth={2} className="text-[#450a0a]" />}
+                {isOpen ? <X size={32} strokeWidth={2.5} /> : <MessageCircle size={32} fill="currentColor" strokeWidth={2} className="text-white drop-shadow-sm" />}
             </button>
         </div>
     );
