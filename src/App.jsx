@@ -815,204 +815,205 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     const [openFaq, setOpenFaq] = useState(null);
 
     return (
-        <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-24">
+        <>
+            <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-24">
 
-            {/* Header / Title */}
-            <div className="animate-float text-center relative w-full">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
+                {/* Header / Title */}
+                <div className="animate-float text-center relative w-full">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
 
-                <h1 className="text-5xl md:text-7xl lg:text-[4.5rem] font-black flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 tracking-tight leading-tight">
-                    <div className="bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-[0_10px_25px_rgba(0,0,0,0.4)] border border-yellow-200/60 transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
-                        <ShoppingCart className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-md" strokeWidth={2.5} />
-                    </div>
-                    <span
-                        className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-600 py-2"
-                        style={{ filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.6))' }}
-                    >
-                        楽天プライスゲッサー
-                    </span>
-                </h1>
-
-                <div className="mt-6 flex items-center justify-center gap-3 md:gap-4 relative z-10">
-                    <div className="h-0.5 w-8 md:w-16 bg-gradient-to-r from-transparent to-yellow-300 rounded-full"></div>
-                    <h2 className="text-sm md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 tracking-[0.1em] md:tracking-[0.2em] whitespace-nowrap"
-                        style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
-                        あなたの金銭感覚、バグってない？
-                    </h2>
-                    <div className="h-0.5 w-8 md:w-16 bg-gradient-to-l from-transparent to-yellow-300 rounded-full"></div>
-                </div>
-            </div>
-
-            {/* Main Interactive Panel */}
-            <div className="panel w-full max-w-2xl overflow-hidden flex flex-col border-none bg-white/95 mt-4">
-                <div className="flex bg-slate-50 border-b border-slate-200">
-                    <button
-                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'create' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'} border-r border-slate-200`}
-                        onClick={() => setTab('create')}>
-                        部屋を作る
-                    </button>
-                    <button
-                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'join' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'}`}
-                        onClick={() => setTab('join')}>
-                        部屋に入る
-                    </button>
-                </div>
-
-                <div className="p-8 flex flex-col md:flex-row gap-8 items-center">
-                    <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 shadow-xl flex items-center justify-center animate-pulse-pop shrink-0 border-4 border-white">
-                        <User className="w-14 h-14 text-white drop-shadow-md" />
-                    </div>
-
-                    <div className="flex-1 space-y-6 w-full">
-                        {error && (
-                            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
-                                <AlertCircle className="w-5 h-5 shrink-0" /> {error}
-                            </div>
-                        )}
-
-                        <div>
-                            <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ニックネーム</label>
-                            <input
-                                type="text" maxLength={10} placeholder="名前を入力"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
-                                value={playerName} onChange={(e) => setPlayerName(e.target.value)}
-                            />
+                    <h1 className="text-5xl md:text-7xl lg:text-[4.5rem] font-black flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 tracking-tight leading-tight">
+                        <div className="bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-[0_10px_25px_rgba(0,0,0,0.4)] border border-yellow-200/60 transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
+                            <ShoppingCart className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-md" strokeWidth={2.5} />
                         </div>
-
-                        {tab === 'join' && (
-                            <div className="animate-fadeIn">
-                                <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ルームID</label>
-                                <input
-                                    type="text" maxLength={5} placeholder="英数字5文字"
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
-                                    value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value)}
-                                />
-                            </div>
-                        )}
-
-                        <button
-                            onClick={tab === 'create' ? handleCreateRoom : handleJoinRoom}
-                            disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold py-4 rounded-xl text-xl btn-solid flex justify-center items-center gap-2 mt-2 shadow-lg"
+                        <span
+                            className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-600 py-2"
+                            style={{ filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.6))' }}
                         >
-                            {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Play className="w-6 h-6 fill-current" /> {tab === 'create' ? '開始する' : '参加する'}</>}
+                            楽天プライスゲッサー
+                        </span>
+                    </h1>
+
+                    <div className="mt-6 flex items-center justify-center gap-3 md:gap-4 relative z-10">
+                        <div className="h-0.5 w-8 md:w-16 bg-gradient-to-r from-transparent to-yellow-300 rounded-full"></div>
+                        <h2 className="text-sm md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 tracking-[0.1em] md:tracking-[0.2em] whitespace-nowrap"
+                            style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
+                            あなたの金銭感覚、バグってない？
+                        </h2>
+                        <div className="h-0.5 w-8 md:w-16 bg-gradient-to-l from-transparent to-yellow-300 rounded-full"></div>
+                    </div>
+                </div>
+
+                {/* Main Interactive Panel */}
+                <div className="panel w-full max-w-2xl overflow-hidden flex flex-col border-none bg-white/95 mt-4">
+                    <div className="flex bg-slate-50 border-b border-slate-200">
+                        <button
+                            className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'create' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'} border-r border-slate-200`}
+                            onClick={() => setTab('create')}>
+                            部屋を作る
+                        </button>
+                        <button
+                            className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'join' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'}`}
+                            onClick={() => setTab('join')}>
+                            部屋に入る
                         </button>
                     </div>
+
+                    <div className="p-8 flex flex-col md:flex-row gap-8 items-center">
+                        <div className="w-28 h-28 rounded-full bg-gradient-to-br from-yellow-300 to-amber-500 shadow-xl flex items-center justify-center animate-pulse-pop shrink-0 border-4 border-white">
+                            <User className="w-14 h-14 text-white drop-shadow-md" />
+                        </div>
+
+                        <div className="flex-1 space-y-6 w-full">
+                            {error && (
+                                <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
+                                    <AlertCircle className="w-5 h-5 shrink-0" /> {error}
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ニックネーム</label>
+                                <input
+                                    type="text" maxLength={10} placeholder="名前を入力"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
+                                    value={playerName} onChange={(e) => setPlayerName(e.target.value)}
+                                />
+                            </div>
+
+                            {tab === 'join' && (
+                                <div className="animate-fadeIn">
+                                    <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ルームID</label>
+                                    <input
+                                        type="text" maxLength={5} placeholder="英数字5文字"
+                                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
+                                        value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value)}
+                                    />
+                                </div>
+                            )}
+
+                            <button
+                                onClick={tab === 'create' ? handleCreateRoom : handleJoinRoom}
+                                disabled={isLoading}
+                                className="w-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold py-4 rounded-xl text-xl btn-solid flex justify-center items-center gap-2 mt-2 shadow-lg"
+                            >
+                                {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Play className="w-6 h-6 fill-current" /> {tab === 'create' ? '開始する' : '参加する'}</>}
+                            </button>
+                        </div>
+                    </div>
                 </div>
+
+                {/* SEO Content: 遊び方・特徴・FAQ */}
+                <div className="w-full max-w-2xl space-y-6">
+
+                    {/* 遊び方セクション */}
+                    <section className="panel p-6 md:p-8 border-none bg-white/95">
+                        <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                            <Info className="w-6 h-6 text-indigo-500" strokeWidth={2.5} /> このゲームの遊び方
+                        </h2>
+                        <div className="space-y-4">
+                            <div className="flex gap-4 items-start p-2">
+                                <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-indigo-200">1</div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800">部屋を作って集まる</h3>
+                                    <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-start p-2">
+                                <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-rose-200">2</div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800">商品の値段を予想する</h3>
+                                    <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
+                                </div>
+                            </div>
+                            <div className="flex gap-4 items-start p-2">
+                                <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-amber-200">3</div>
+                                <div>
+                                    <h3 className="font-bold text-slate-800">結果発表＆スコア獲得</h3>
+                                    <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* モード紹介セクション */}
+                    <section className="panel bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8 border border-white">
+                        <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                            <Trophy className="w-6 h-6 text-amber-500" strokeWidth={2.5} /> 充実のゲームモード
+                        </h2>
+                        <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                            「楽天プライスゲッサー」は、単なる値段当てにとどまらず、合コンやリモート飲み会でさらに盛り上がる多彩なルールを用意しています。
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                <h3 className="font-bold text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
+                                <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                <h3 className="font-bold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
+                                <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                <h3 className="font-bold text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ロー</h3>
+                                <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
+                            </div>
+                            <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                                <h3 className="font-bold text-amber-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
+                                <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* FAQセクション */}
+                    <section className="panel p-6 md:p-8 border-none bg-white/95">
+                        <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                            <MessageCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} /> よくある質問 (FAQ)
+                        </h2>
+                        <div className="space-y-3">
+                            {[
+                                { q: "完全無料で遊べますか？", a: "はい。会員登録やアプリのインストールも一切不要で、ブラウザを開くだけで完全無料で遊ぶことができます。" },
+                                { q: "何人まで一緒に遊べますか？", a: "1つのルームにつき、最大14人まで同時に接続して遊ぶことが可能です。少人数でも大人数でもお楽しみいただけます。" },
+                                { q: "商品はどうやって選ばれていますか？", a: "楽天市場の実際のデータ（API）を取得して出題しています。「食品」「家電」などのジャンル指定や、好きなキーワードでの絞り込みも可能です。" },
+                                { q: "通話機能はありますか？", a: "アプリ自体に音声通話機能はありません。LINE通話やDiscord、Zoomなどで通話しながら遊ぶことを強くおすすめします。" }
+                            ].map((faq, idx) => (
+                                <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+                                    <button
+                                        className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center transition-colors"
+                                        onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                    >
+                                        <span className="flex items-center gap-2"><span className="text-rose-500">Q.</span> {faq.q}</span>
+                                        {openFaq === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                    </button>
+                                    {openFaq === idx && (
+                                        <div className="p-4 bg-white text-slate-600 font-medium text-sm leading-relaxed border-t border-slate-100 animate-fadeIn">
+                                            <span className="text-indigo-500 font-bold mr-2">A.</span>{faq.a}
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                </div>
+
+                {/* Footer / Links */}
+                <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/80 font-bold text-sm">
+                    <button onClick={() => setShowTerms(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                        <FileText size={16} /> 利用規約
+                    </button>
+                    <span className="text-white/30 hidden md:inline">|</span>
+                    <button onClick={() => setShowPrivacy(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                        <ShieldCheck size={16} /> プライバシーポリシー
+                    </button>
+                    <span className="text-white/30 hidden md:inline">|</span>
+                    <a href="mailto:rakutenpriceguesser@gmail.com" className="hover:text-white flex items-center gap-1 transition-colors">
+                        <Mail size={16} /> お問い合わせ
+                    </a>
+                </footer>
             </div>
-
-            {/* SEO Content: 遊び方・特徴・FAQ */}
-            <div className="w-full max-w-2xl space-y-6">
-
-                {/* 遊び方セクション */}
-                <section className="panel p-6 md:p-8 border-none bg-white/95">
-                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                        <Info className="w-6 h-6 text-indigo-500" strokeWidth={2.5} /> このゲームの遊び方
-                    </h2>
-                    <div className="space-y-4">
-                        <div className="flex gap-4 items-start p-2">
-                            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-indigo-200">1</div>
-                            <div>
-                                <h3 className="font-bold text-slate-800">部屋を作って集まる</h3>
-                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 items-start p-2">
-                            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-rose-200">2</div>
-                            <div>
-                                <h3 className="font-bold text-slate-800">商品の値段を予想する</h3>
-                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
-                            </div>
-                        </div>
-                        <div className="flex gap-4 items-start p-2">
-                            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-amber-200">3</div>
-                            <div>
-                                <h3 className="font-bold text-slate-800">結果発表＆スコア獲得</h3>
-                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-                {/* モード紹介セクション */}
-                <section className="panel bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8 border border-white">
-                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                        <Trophy className="w-6 h-6 text-amber-500" strokeWidth={2.5} /> 充実のゲームモード
-                    </h2>
-                    <p className="text-slate-600 text-sm mb-6 leading-relaxed">
-                        「楽天プライスゲッサー」は、単なる値段当てにとどまらず、合コンやリモート飲み会でさらに盛り上がる多彩なルールを用意しています。
-                    </p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
-                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
-                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ロー</h3>
-                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
-                        </div>
-                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                            <h3 className="font-bold text-amber-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
-                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
-                        </div>
-                    </div>
-                </section>
-
-                {/* FAQセクション */}
-                <section className="panel p-6 md:p-8 border-none bg-white/95">
-                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                        <MessageCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} /> よくある質問 (FAQ)
-                    </h2>
-                    <div className="space-y-3">
-                        {[
-                            { q: "完全無料で遊べますか？", a: "はい。会員登録やアプリのインストールも一切不要で、ブラウザを開くだけで完全無料で遊ぶことができます。" },
-                            { q: "何人まで一緒に遊べますか？", a: "1つのルームにつき、最大14人まで同時に接続して遊ぶことが可能です。少人数でも大人数でもお楽しみいただけます。" },
-                            { q: "商品はどうやって選ばれていますか？", a: "楽天市場の実際のデータ（API）を取得して出題しています。「食品」「家電」などのジャンル指定や、好きなキーワードでの絞り込みも可能です。" },
-                            { q: "通話機能はありますか？", a: "アプリ自体に音声通話機能はありません。LINE通話やDiscord、Zoomなどで通話しながら遊ぶことを強くおすすめします。" }
-                        ].map((faq, idx) => (
-                            <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
-                                <button
-                                    className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center transition-colors"
-                                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
-                                >
-                                    <span className="flex items-center gap-2"><span className="text-rose-500">Q.</span> {faq.q}</span>
-                                    {openFaq === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                                </button>
-                                {openFaq === idx && (
-                                    <div className="p-4 bg-white text-slate-600 font-medium text-sm leading-relaxed border-t border-slate-100 animate-fadeIn">
-                                        <span className="text-indigo-500 font-bold mr-2">A.</span>{faq.a}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                </section>
-            </div>
-
-            {/* Footer / Links */}
-            <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/80 font-bold text-sm">
-                <button onClick={() => setShowTerms(true)} className="hover:text-white flex items-center gap-1 transition-colors">
-                    <FileText size={16} /> 利用規約
-                </button>
-                <span className="text-white/30 hidden md:inline">|</span>
-                <button onClick={() => setShowPrivacy(true)} className="hover:text-white flex items-center gap-1 transition-colors">
-                    <ShieldCheck size={16} /> プライバシーポリシー
-                </button>
-                <span className="text-white/30 hidden md:inline">|</span>
-                <a href="mailto:rakutenpriceguesser@gmail.com" className="hover:text-white flex items-center gap-1 transition-colors">
-                    <Mail size={16} /> お問い合わせ
-                </a>
-            </footer>
 
             {/* Modals for Terms & Privacy */}
             {showTerms && <LegalModal title="利用規約" content={termsContent} onClose={() => setShowTerms(false)} />}
             {showPrivacy && <LegalModal title="プライバシーポリシー" content={privacyContent} onClose={() => setShowPrivacy(false)} />}
-
-        </div>
+        </>
     );
 }
 
@@ -1373,7 +1374,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
     if (!currentProduct) return null;
 
     return (
-        <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
+        <>
             {showDoubleAnim && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
                     <div className="bg-gradient-to-br from-amber-400 to-yellow-500 border border-white/40 rounded-3xl p-8 md:p-12 transform -rotate-3 animate-pulse-pop shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
@@ -1386,143 +1387,145 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                     </div>
                 </div>
             )}
+            <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
 
-            {/* Header */}
-            <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
-                <div className="bg-white/90 backdrop-blur-md border border-white/50 text-slate-800 font-bold text-lg md:text-xl px-6 py-2 rounded-full shadow-lg flex items-center">
-                    ラウンド <span className="text-indigo-600 text-2xl md:text-3xl font-black mx-2">{gameState.currentRound + 1}</span> <span className="text-slate-400">/ {gameState.settings.rounds}</span>
-                    {gameState.settings.doubleFinalRound && isFinalRound && (
-                        <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-xs md:text-sm px-3 py-1 rounded-full ml-3 font-black shadow-md animate-pulse-pop shrink-0">スコア2倍!!</span>
-                    )}
-                </div>
-                <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
-                    <LeaveButton onLeave={handleLeaveRoom} />
-                    <div className={`backdrop-blur-md border border-white/50 font-black text-2xl md:text-3xl flex items-center gap-2 px-6 py-2 rounded-full shadow-lg transition-colors ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse bg-rose-50 text-rose-600' : 'bg-white/90 text-slate-800'}`}>
-                        <Clock className="w-6 h-6 md:w-8 md:h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
+                {/* Header */}
+                <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
+                    <div className="bg-white/90 backdrop-blur-md border border-white/50 text-slate-800 font-bold text-lg md:text-xl px-6 py-2 rounded-full shadow-lg flex items-center">
+                        ラウンド <span className="text-indigo-600 text-2xl md:text-3xl font-black mx-2">{gameState.currentRound + 1}</span> <span className="text-slate-400">/ {gameState.settings.rounds}</span>
+                        {gameState.settings.doubleFinalRound && isFinalRound && (
+                            <span className="bg-gradient-to-r from-amber-400 to-yellow-500 text-white text-xs md:text-sm px-3 py-1 rounded-full ml-3 font-black shadow-md animate-pulse-pop shrink-0">スコア2倍!!</span>
+                        )}
+                    </div>
+                    <div className="flex items-center gap-2 md:gap-4 flex-wrap justify-end">
+                        <LeaveButton onLeave={handleLeaveRoom} />
+                        <div className={`backdrop-blur-md border border-white/50 font-black text-2xl md:text-3xl flex items-center gap-2 px-6 py-2 rounded-full shadow-lg transition-colors ${!isUnlimited && timeLeft <= 5 ? 'animate-pulse bg-rose-50 text-rose-600' : 'bg-white/90 text-slate-800'}`}>
+                            <Clock className="w-6 h-6 md:w-8 md:h-8" /> {isUnlimited ? '∞' : `${timeLeft}秒`}
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div className="panel w-full p-4 md:p-6 flex flex-col gap-6">
-                {/* Image & Title Container */}
-                <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-                    {/* Images */}
-                    <div className="w-full md:w-1/2 flex flex-col items-center gap-4">
-                        <div className="w-full aspect-square bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden p-4 relative shadow-inner border border-slate-100">
-                            <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain drop-shadow-md animate-fadeIn" />
-                        </div>
-                        {displayImages.length > 1 && (
-                            <div className="flex gap-3 w-full justify-center">
-                                {displayImages.map((img, i) => (
-                                    <button key={i} onClick={() => setSelectedImageIndex(i)} className={`w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-white transition-all hover:-translate-y-1 ${selectedImageIndex === i ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-md' : 'border border-slate-200 opacity-70 hover:opacity-100'}`}>
-                                        <img src={img} className="w-full h-full object-cover" />
-                                    </button>
+                <div className="panel w-full p-4 md:p-6 flex flex-col gap-6">
+                    {/* Image & Title Container */}
+                    <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+                        {/* Images */}
+                        <div className="w-full md:w-1/2 flex flex-col items-center gap-4">
+                            <div className="w-full aspect-square bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden p-4 relative shadow-inner border border-slate-100">
+                                <img src={displayImages[selectedImageIndex]} className="max-w-full max-h-full object-contain drop-shadow-md animate-fadeIn" />
+                            </div>
+                            {displayImages.length > 1 && (
+                                <div className="flex gap-3 w-full justify-center">
+                                    {displayImages.map((img, i) => (
+                                        <button key={i} onClick={() => setSelectedImageIndex(i)} className={`w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden bg-white transition-all hover:-translate-y-1 ${selectedImageIndex === i ? 'ring-2 ring-indigo-500 ring-offset-2 shadow-md' : 'border border-slate-200 opacity-70 hover:opacity-100'}`}>
+                                            <img src={img} className="w-full h-full object-cover" />
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                            <div className="flex flex-wrap gap-2 justify-center">
+                                {currentProduct.tags.map((tag, i) => (
+                                    <span key={i} className="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-bold px-3 py-1 rounded-full shadow-sm">{tag}</span>
                                 ))}
                             </div>
-                        )}
-                        <div className="flex flex-wrap gap-2 justify-center">
-                            {currentProduct.tags.map((tag, i) => (
-                                <span key={i} className="bg-indigo-50 text-indigo-600 border border-indigo-100 text-xs font-bold px-3 py-1 rounded-full shadow-sm">{tag}</span>
-                            ))}
+                        </div>
+
+                        {/* Info */}
+                        <div className="w-full md:w-1/2 flex flex-col gap-4">
+                            <h3 className="text-xl md:text-2xl font-bold leading-relaxed text-slate-800 bg-gradient-to-r from-slate-50 to-white p-4 rounded-xl shadow-sm border border-slate-100">{currentProduct.name}</h3>
+                            {currentProduct.reviewCount > 0 && (
+                                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 w-max shadow-sm">
+                                    <Star className="w-5 h-5 text-amber-400 fill-current" />
+                                    <span className="text-lg font-black text-slate-800">{currentProduct.reviewAverage}</span>
+                                    <span className="text-slate-400 text-sm font-medium">({currentProduct.reviewCount.toLocaleString()})</span>
+                                </div>
+                            )}
+                            <div className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 overflow-y-auto custom-scrollbar text-sm font-medium text-slate-600 max-h-48 md:max-h-80 shadow-inner whitespace-pre-wrap leading-relaxed">
+                                {currentProduct.description}
+                            </div>
                         </div>
                     </div>
 
-                    {/* Info */}
-                    <div className="w-full md:w-1/2 flex flex-col gap-4">
-                        <h3 className="text-xl md:text-2xl font-bold leading-relaxed text-slate-800 bg-gradient-to-r from-slate-50 to-white p-4 rounded-xl shadow-sm border border-slate-100">{currentProduct.name}</h3>
-                        {currentProduct.reviewCount > 0 && (
-                            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-slate-100 w-max shadow-sm">
-                                <Star className="w-5 h-5 text-amber-400 fill-current" />
-                                <span className="text-lg font-black text-slate-800">{currentProduct.reviewAverage}</span>
-                                <span className="text-slate-400 text-sm font-medium">({currentProduct.reviewCount.toLocaleString()})</span>
+                    {/* Input Area */}
+                    <div className="w-full bg-gradient-to-br from-slate-800 to-slate-900 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col justify-center border border-slate-700 relative overflow-hidden">
+                        {/* Decorative Glow */}
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+
+                        {me?.hasGuessed ? (
+                            <div className="text-center py-6 text-white relative z-10 animate-fadeIn">
+                                <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-3 drop-shadow-md" />
+                                <h3 className="text-3xl font-black drop-shadow-md">予想完了！</h3>
+                                <p className="font-medium mt-3 text-slate-300">
+                                    {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
+                                </p>
                             </div>
+                        ) : isHighLow ? (
+                            <div className="flex flex-col items-center gap-6 w-full relative z-10">
+                                <div className="text-lg md:text-xl font-bold text-slate-300 mb-2 text-center">
+                                    実際の価格は、基準価格 <span className="text-amber-400 font-black text-3xl md:text-4xl mx-2 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">¥{currentProduct.basePrice.toLocaleString()}</span> より...
+                                </div>
+                                <div className="flex w-full gap-4 md:gap-8 max-w-xl mx-auto">
+                                    <button
+                                        onClick={() => submitGuess('high')}
+                                        disabled={me?.hasGuessed}
+                                        className="flex-1 bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <ArrowUpCircle size={32} /> 高い
+                                    </button>
+                                    <button
+                                        onClick={() => submitGuess('low')}
+                                        disabled={me?.hasGuessed}
+                                        className="flex-1 bg-gradient-to-b from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
+                                    >
+                                        <ArrowDownCircle size={32} /> 安い
+                                    </button>
+                                </div>
+                            </div>
+                        ) : (
+                            <form onSubmit={onSubmit} className="flex flex-col md:flex-row items-center gap-4 w-full relative z-10 max-w-3xl mx-auto">
+                                <div className="flex items-center gap-3 flex-1 w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 px-6 py-4 shadow-inner">
+                                    <span className="text-3xl md:text-4xl font-black text-amber-400 drop-shadow-md">¥</span>
+                                    <input
+                                        ref={inputRef}
+                                        type="number" autoFocus placeholder="ズバリ、いくら？"
+                                        min="0"
+                                        className="flex-1 w-full bg-transparent text-3xl md:text-4xl font-bold text-white focus:outline-none text-right py-2 placeholder-white/30"
+                                        value={guessInput}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            if (val === '' || Number(val) >= 0) setGuessInput(val);
+                                        }}
+                                    />
+                                </div>
+                                <button
+                                    type="submit" disabled={!guessInput}
+                                    className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black py-5 px-12 rounded-2xl text-2xl btn-solid shadow-lg whitespace-nowrap"
+                                >決定！</button>
+                            </form>
                         )}
-                        <div className="flex-1 bg-slate-50 p-5 rounded-2xl border border-slate-100 overflow-y-auto custom-scrollbar text-sm font-medium text-slate-600 max-h-48 md:max-h-80 shadow-inner whitespace-pre-wrap leading-relaxed">
-                            {currentProduct.description}
-                        </div>
                     </div>
-                </div>
 
-                {/* Input Area */}
-                <div className="w-full bg-gradient-to-br from-slate-800 to-slate-900 p-6 md:p-8 rounded-3xl shadow-xl flex flex-col justify-center border border-slate-700 relative overflow-hidden">
-                    {/* Decorative Glow */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
-
-                    {me?.hasGuessed ? (
-                        <div className="text-center py-6 text-white relative z-10 animate-fadeIn">
-                            <CheckCircle2 className="w-16 h-16 text-emerald-400 mx-auto mb-3 drop-shadow-md" />
-                            <h3 className="text-3xl font-black drop-shadow-md">予想完了！</h3>
-                            <p className="font-medium mt-3 text-slate-300">
-                                {Object.keys(gameState.players).length > 1 ? "他のプレイヤーを待っています..." : "まもなく正解発表です..."}
-                            </p>
-                        </div>
-                    ) : isHighLow ? (
-                        <div className="flex flex-col items-center gap-6 w-full relative z-10">
-                            <div className="text-lg md:text-xl font-bold text-slate-300 mb-2 text-center">
-                                実際の価格は、基準価格 <span className="text-amber-400 font-black text-3xl md:text-4xl mx-2 bg-black/40 px-4 py-1.5 rounded-xl border border-white/10 shadow-inner">¥{currentProduct.basePrice.toLocaleString()}</span> より...
-                            </div>
-                            <div className="flex w-full gap-4 md:gap-8 max-w-xl mx-auto">
-                                <button
-                                    onClick={() => submitGuess('high')}
-                                    disabled={me?.hasGuessed}
-                                    className="flex-1 bg-gradient-to-b from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
-                                >
-                                    <ArrowUpCircle size={32} /> 高い
-                                </button>
-                                <button
-                                    onClick={() => submitGuess('low')}
-                                    disabled={me?.hasGuessed}
-                                    className="flex-1 bg-gradient-to-b from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-black py-5 md:py-6 rounded-2xl text-2xl md:text-3xl btn-solid shadow-lg flex items-center justify-center gap-2"
-                                >
-                                    <ArrowDownCircle size={32} /> 安い
-                                </button>
+                    {/* Live Guess Area */}
+                    {gameState.settings.showLiveGuess && !isHighLow && (
+                        <div className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mt-2 animate-fadeIn">
+                            <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider"><Users size={18} className="text-indigo-500" /> みんなの入力状況</h4>
+                            <div className="flex flex-wrap gap-3">
+                                {Object.entries(gameState.players).map(([id, p]) => (
+                                    <div key={id} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${p.hasGuessed ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'} ${id === myPeerId ? 'ring-2 ring-indigo-300 ring-offset-1' : ''}`}>
+                                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${id === myPeerId ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-indigo-400 to-purple-500'}`}>
+                                            {p.name.charAt(0)}
+                                        </div>
+                                        <span className="font-bold text-sm text-slate-700">{p.name}</span>
+                                        <span className={`font-black ml-1 ${p.hasGuessed ? 'text-emerald-600' : 'text-indigo-600'}`}>
+                                            {p.hasGuessed ? `¥${Number(p.currentGuess).toLocaleString()}!` : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}?` : <span className="text-slate-400 text-sm">考え中...</span>)}
+                                        </span>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-                    ) : (
-                        <form onSubmit={onSubmit} className="flex flex-col md:flex-row items-center gap-4 w-full relative z-10 max-w-3xl mx-auto">
-                            <div className="flex items-center gap-3 flex-1 w-full bg-white/10 backdrop-blur-md rounded-2xl border border-white/20 px-6 py-4 shadow-inner">
-                                <span className="text-3xl md:text-4xl font-black text-amber-400 drop-shadow-md">¥</span>
-                                <input
-                                    ref={inputRef}
-                                    type="number" autoFocus placeholder="ズバリ、いくら？"
-                                    min="0"
-                                    className="flex-1 w-full bg-transparent text-3xl md:text-4xl font-bold text-white focus:outline-none text-right py-2 placeholder-white/30"
-                                    value={guessInput}
-                                    onChange={(e) => {
-                                        const val = e.target.value;
-                                        if (val === '' || Number(val) >= 0) setGuessInput(val);
-                                    }}
-                                />
-                            </div>
-                            <button
-                                type="submit" disabled={!guessInput}
-                                className="w-full md:w-auto bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-400 hover:to-green-500 text-white font-black py-5 px-12 rounded-2xl text-2xl btn-solid shadow-lg whitespace-nowrap"
-                            >決定！</button>
-                        </form>
                     )}
                 </div>
-
-                {/* Live Guess Area */}
-                {gameState.settings.showLiveGuess && !isHighLow && (
-                    <div className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mt-2 animate-fadeIn">
-                        <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider"><Users size={18} className="text-indigo-500" /> みんなの入力状況</h4>
-                        <div className="flex flex-wrap gap-3">
-                            {Object.entries(gameState.players).map(([id, p]) => (
-                                <div key={id} className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all ${p.hasGuessed ? 'bg-emerald-50 border-emerald-200' : 'bg-slate-50 border-slate-200'} ${id === myPeerId ? 'ring-2 ring-indigo-300 ring-offset-1' : ''}`}>
-                                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white shadow-sm ${id === myPeerId ? 'bg-gradient-to-br from-rose-400 to-red-500' : 'bg-gradient-to-br from-indigo-400 to-purple-500'}`}>
-                                        {p.name.charAt(0)}
-                                    </div>
-                                    <span className="font-bold text-sm text-slate-700">{p.name}</span>
-                                    <span className={`font-black ml-1 ${p.hasGuessed ? 'text-emerald-600' : 'text-indigo-600'}`}>
-                                        {p.hasGuessed ? `¥${Number(p.currentGuess).toLocaleString()}!` : (p.liveGuess ? `¥${Number(p.liveGuess).toLocaleString()}?` : <span className="text-slate-400 text-sm">考え中...</span>)}
-                                    </span>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
             </div>
-        </div>
+        </>
     )
 }
 
