@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
+import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle, ArrowUpCircle, ArrowDownCircle, FileText, ShieldCheck, ChevronDown, ChevronUp, Mail } from 'lucide-react';
 
 // --- Rakuten API Constants ---
 const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
@@ -26,8 +26,25 @@ function usePeerJS() {
 export default function App() {
     const peerReady = usePeerJS();
 
-    // --- AdSense Integration ---
+    // --- SEO & AdSense Integration ---
     useEffect(() => {
+        // SEO対策: クローラー向けにmetaタグとタイトルを動的に設定
+        document.title = "楽天プライスゲッサー | 友達と盛り上がる無料の値段当てゲーム";
+
+        const setMeta = (name, content) => {
+            let meta = document.querySelector(`meta[name="${name}"]`);
+            if (!meta) {
+                meta = document.createElement('meta');
+                meta.name = name;
+                document.head.appendChild(meta);
+            }
+            meta.content = content;
+        };
+
+        setMeta('description', '楽天市場の実際の商品を使って、友達と値段を予想し合う無料のパーティーゲーム「楽天プライスゲッサー」。インストール不要のブラウザゲームで、リモート飲み会や暇つぶしに最適！通常モードのほか、チキンレースやハイ＆ローなど多彩なルールで遊べます。');
+        setMeta('keywords', '値段当て, 楽天, パーティーゲーム, ブラウザゲーム, 無料ゲーム, マルチプレイ, チキンレース, ハイ＆ロー');
+
+        // AdSense Script
         const script = document.createElement('script');
         script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5871148617904389";
         script.async = true;
@@ -793,19 +810,21 @@ export default function App() {
 
 function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, handleCreateRoom, handleJoinRoom, error, isLoading }) {
     const [tab, setTab] = useState('create');
+    const [showTerms, setShowTerms] = useState(false);
+    const [showPrivacy, setShowPrivacy] = useState(false);
+    const [openFaq, setOpenFaq] = useState(null);
 
     return (
-        <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-12">
+        <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-24">
+
+            {/* Header / Title */}
             <div className="animate-float text-center relative w-full">
-                {/* タイトル背景の後光エフェクト */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[150%] bg-gradient-to-r from-transparent via-white/10 to-transparent blur-3xl rounded-full pointer-events-none"></div>
 
                 <h1 className="text-5xl md:text-7xl lg:text-[4.5rem] font-black flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 relative z-10 tracking-tight leading-tight">
-                    {/* アイコン部分をリッチなバッジ風に */}
                     <div className="bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 p-3 md:p-4 rounded-2xl md:rounded-3xl shadow-[0_10px_25px_rgba(0,0,0,0.4)] border border-yellow-200/60 transform -rotate-6 transition-transform hover:rotate-0 hover:scale-105">
                         <ShoppingCart className="w-12 h-12 md:w-16 md:h-16 text-white drop-shadow-md" strokeWidth={2.5} />
                     </div>
-                    {/* タイトル文字をゴールドグラデーション＋ドロップシャドウに */}
                     <span
                         className="text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-600 py-2"
                         style={{ filter: 'drop-shadow(0px 8px 12px rgba(0,0,0,0.6))' }}
@@ -816,24 +835,24 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
 
                 <div className="mt-6 flex items-center justify-center gap-3 md:gap-4 relative z-10">
                     <div className="h-0.5 w-8 md:w-16 bg-gradient-to-r from-transparent to-yellow-300 rounded-full"></div>
-                    <p className="text-sm md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 tracking-[0.1em] md:tracking-[0.2em] whitespace-nowrap"
+                    <h2 className="text-sm md:text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-slate-200 tracking-[0.1em] md:tracking-[0.2em] whitespace-nowrap"
                         style={{ filter: 'drop-shadow(0px 2px 4px rgba(0,0,0,0.5))' }}>
                         あなたの金銭感覚、バグってない？
-                    </p>
+                    </h2>
                     <div className="h-0.5 w-8 md:w-16 bg-gradient-to-l from-transparent to-yellow-300 rounded-full"></div>
                 </div>
             </div>
 
+            {/* Main Interactive Panel */}
             <div className="panel w-full max-w-2xl overflow-hidden flex flex-col border-none bg-white/95 mt-4">
-                {/* Tabs */}
                 <div className="flex bg-slate-50 border-b border-slate-200">
                     <button
-                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'create' ? 'bg-white text-red-600 shadow-[0_2px_0_#ef4444_inset]' : 'text-slate-500 hover:bg-slate-100'} border-r border-slate-200`}
+                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'create' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'} border-r border-slate-200`}
                         onClick={() => setTab('create')}>
                         部屋を作る
                     </button>
                     <button
-                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'join' ? 'bg-white text-red-600 shadow-[0_2px_0_#ef4444_inset]' : 'text-slate-500 hover:bg-slate-100'}`}
+                        className={`flex-1 py-4 text-lg font-bold transition-all ${tab === 'join' ? 'bg-white text-rose-600 shadow-[0_2px_0_#e11d48_inset]' : 'text-slate-500 hover:bg-slate-100'}`}
                         onClick={() => setTab('join')}>
                         部屋に入る
                     </button>
@@ -846,7 +865,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
 
                     <div className="flex-1 space-y-6 w-full">
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
+                            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-center gap-2 font-bold shadow-sm">
                                 <AlertCircle className="w-5 h-5 shrink-0" /> {error}
                             </div>
                         )}
@@ -855,7 +874,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                             <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ニックネーム</label>
                             <input
                                 type="text" maxLength={10} placeholder="名前を入力"
-                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition-all shadow-inner"
+                                className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
                                 value={playerName} onChange={(e) => setPlayerName(e.target.value)}
                             />
                         </div>
@@ -865,7 +884,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                                 <label className="block text-slate-700 font-bold mb-2 text-sm uppercase tracking-wider">ルームID</label>
                                 <input
                                     type="text" maxLength={5} placeholder="英数字5文字"
-                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-red-400 focus:bg-white transition-all shadow-inner"
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-lg font-bold text-slate-800 uppercase tracking-widest text-center focus:outline-none focus:ring-2 focus:ring-rose-400 focus:bg-white transition-all shadow-inner"
                                     value={roomIdInput} onChange={(e) => setRoomIdInput(e.target.value)}
                                 />
                             </div>
@@ -874,7 +893,7 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                         <button
                             onClick={tab === 'create' ? handleCreateRoom : handleJoinRoom}
                             disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-400 hover:to-rose-500 text-white font-bold py-4 rounded-xl text-xl btn-solid flex justify-center items-center gap-2 mt-2 shadow-lg"
+                            className="w-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold py-4 rounded-xl text-xl btn-solid flex justify-center items-center gap-2 mt-2 shadow-lg"
                         >
                             {isLoading ? <Loader2 className="w-6 h-6 animate-spin" /> : <><Play className="w-6 h-6 fill-current" /> {tab === 'create' ? '開始する' : '参加する'}</>}
                         </button>
@@ -882,58 +901,187 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                 </div>
             </div>
 
-            {/* 遊び方セクション */}
-            <div className="panel w-full max-w-2xl p-6 md:p-8 mt-4 border-none bg-white/95">
-                <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                    <Info className="w-6 h-6 text-indigo-500" strokeWidth={2.5} /> このゲームの遊び方
-                </h2>
-                <div className="space-y-4">
-                    <div className="flex gap-4 items-start p-2">
-                        <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-indigo-200">1</div>
-                        <div>
-                            <h3 className="font-bold text-slate-800">部屋を作って集まる</h3>
-                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
+            {/* SEO Content: 遊び方・特徴・FAQ */}
+            <div className="w-full max-w-2xl space-y-6">
+
+                {/* 遊び方セクション */}
+                <section className="panel p-6 md:p-8 border-none bg-white/95">
+                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                        <Info className="w-6 h-6 text-indigo-500" strokeWidth={2.5} /> このゲームの遊び方
+                    </h2>
+                    <div className="space-y-4">
+                        <div className="flex gap-4 items-start p-2">
+                            <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-indigo-200">1</div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">部屋を作って集まる</h3>
+                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">代表者が「部屋を作る」からルームを作成し、表示されたIDを友達に共有しよう。他の人は「部屋に入る」からIDを入力して合流！</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-start p-2">
+                            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-rose-200">2</div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">商品の値段を予想する</h3>
+                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-4 items-start p-2">
+                            <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-amber-200">3</div>
+                            <div>
+                                <h3 className="font-bold text-slate-800">結果発表＆スコア獲得</h3>
+                                <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
+                            </div>
                         </div>
                     </div>
-                    <div className="flex gap-4 items-start p-2">
-                        <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-rose-200">2</div>
-                        <div>
-                            <h3 className="font-bold text-slate-800">商品の値段を予想する</h3>
-                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">ゲームが始まると楽天市場の実際の商品が表示されます。画像や説明文から推測して、ズバリいくらか金額を入力！</p>
+                </section>
+
+                {/* モード紹介セクション */}
+                <section className="panel bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8 border border-white">
+                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                        <Trophy className="w-6 h-6 text-amber-500" strokeWidth={2.5} /> 充実のゲームモード
+                    </h2>
+                    <p className="text-slate-600 text-sm mb-6 leading-relaxed">
+                        「楽天プライスゲッサー」は、単なる値段当てにとどまらず、合コンやリモート飲み会でさらに盛り上がる多彩なルールを用意しています。
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
+                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
+                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ロー</h3>
+                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
+                        </div>
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+                            <h3 className="font-bold text-amber-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
+                            <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
                         </div>
                     </div>
-                    <div className="flex gap-4 items-start p-2">
-                        <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center font-black text-lg shrink-0 shadow-sm border border-amber-200">3</div>
-                        <div>
-                            <h3 className="font-bold text-slate-800">結果発表＆スコア獲得</h3>
-                            <p className="text-slate-600 font-medium mt-1 text-sm leading-relaxed">実際の販売価格に一番近いほど高得点！指定したラウンド数を戦って、合計スコアが一番高い人が優勝です🏆</p>
-                        </div>
+                </section>
+
+                {/* FAQセクション */}
+                <section className="panel p-6 md:p-8 border-none bg-white/95">
+                    <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
+                        <MessageCircle className="w-6 h-6 text-emerald-500" strokeWidth={2.5} /> よくある質問 (FAQ)
+                    </h2>
+                    <div className="space-y-3">
+                        {[
+                            { q: "完全無料で遊べますか？", a: "はい。会員登録やアプリのインストールも一切不要で、ブラウザを開くだけで完全無料で遊ぶことができます。" },
+                            { q: "何人まで一緒に遊べますか？", a: "1つのルームにつき、最大14人まで同時に接続して遊ぶことが可能です。少人数でも大人数でもお楽しみいただけます。" },
+                            { q: "商品はどうやって選ばれていますか？", a: "楽天市場の実際のデータ（API）を取得して出題しています。「食品」「家電」などのジャンル指定や、好きなキーワードでの絞り込みも可能です。" },
+                            { q: "通話機能はありますか？", a: "アプリ自体に音声通話機能はありません。LINE通話やDiscord、Zoomなどで通話しながら遊ぶことを強くおすすめします。" }
+                        ].map((faq, idx) => (
+                            <div key={idx} className="border border-slate-200 rounded-xl overflow-hidden">
+                                <button
+                                    className="w-full text-left p-4 bg-slate-50 hover:bg-slate-100 font-bold text-slate-800 flex justify-between items-center transition-colors"
+                                    onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                                >
+                                    <span className="flex items-center gap-2"><span className="text-rose-500">Q.</span> {faq.q}</span>
+                                    {openFaq === idx ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                                </button>
+                                {openFaq === idx && (
+                                    <div className="p-4 bg-white text-slate-600 font-medium text-sm leading-relaxed border-t border-slate-100 animate-fadeIn">
+                                        <span className="text-indigo-500 font-bold mr-2">A.</span>{faq.a}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
                     </div>
-                </div>
+                </section>
             </div>
 
-            {/* モード紹介セクション */}
-            <div className="panel w-full max-w-2xl bg-gradient-to-br from-slate-50 to-slate-100 p-6 md:p-8 mt-4 border border-white">
-                <h2 className="text-xl font-black text-slate-800 mb-6 flex items-center gap-2 border-b border-slate-200 pb-4">
-                    <Trophy className="w-6 h-6 text-amber-500" strokeWidth={2.5} /> ゲームモードの紹介
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-emerald-600 flex items-center gap-2"><CheckCircle2 className="w-5 h-5" />通常モード</h3>
-                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額に一番近い予想をした人が高得点をもらえるスタンダードなルール。</p>
+            {/* Footer / Links */}
+            <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/80 font-bold text-sm">
+                <button onClick={() => setShowTerms(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                    <FileText size={16} /> 利用規約
+                </button>
+                <span className="text-white/30 hidden md:inline">|</span>
+                <button onClick={() => setShowPrivacy(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                    <ShieldCheck size={16} /> プライバシーポリシー
+                </button>
+                <span className="text-white/30 hidden md:inline">|</span>
+                <a href="mailto:rakutenpriceguesser@gmail.com" className="hover:text-white flex items-center gap-1 transition-colors">
+                    <Mail size={16} /> お問い合わせ
+                </a>
+            </footer>
+
+            {/* Modals for Terms & Privacy */}
+            {showTerms && <LegalModal title="利用規約" content={termsContent} onClose={() => setShowTerms(false)} />}
+            {showPrivacy && <LegalModal title="プライバシーポリシー" content={privacyContent} onClose={() => setShowPrivacy(false)} />}
+
+        </div>
+    );
+}
+
+// 規約コンテンツデータ
+const termsContent = `
+本利用規約（以下、「本規約」と言います。）は、「楽天プライスゲッサー」（以下、「本サービス」と言います。）の提供条件及び、利用者の皆様との間の権利義務関係を定めるものです。
+
+第1条（適用）
+本規約は、本サービスの利用に関する一切の関係に適用されます。本サービスをご利用になる場合は、本規約に同意したものとみなされます。
+
+第2条（本サービスの内容と免責事項）
+1. 本サービスは、楽天グループ株式会社が提供するAPIを利用し、商品情報を取得・表示して価格を予想するエンターテインメント目的のゲームです。
+2. 表示される商品価格、レビュー情報、商品画像等は取得時点のものであり、常に最新または正確であることを保証するものではありません。
+3. 運営者は、本サービスに起因して利用者に生じたあらゆる損害について一切の責任を負いません。
+
+第3条（禁止事項）
+利用者は、本サービスの利用にあたり、以下の行為をしてはなりません。
+1. 法令または公序良俗に違反する行為
+2. 犯罪行為に関連する行為
+3. 本サービスのサーバーやネットワークの機能を破壊したり、妨害したりする行為
+4. 他の利用者に関する個人情報等を収集または蓄積する行為
+5. その他、運営者が不適切と判断する行為
+
+第4条（サービス内容の変更等）
+運営者は、利用者に通知することなく、本サービスの内容を変更しまたは本サービスの提供を中止することができるものとします。
+
+第5条（準拠法・裁判管轄）
+本規約の解釈にあたっては、日本法を準拠法とします。本サービスに関して紛争が生じた場合には、運営者の所在地を管轄する裁判所を専属的合意管轄とします。
+`;
+
+const privacyContent = `
+本プライバシーポリシーは、「楽天プライスゲッサー」（以下、「本サービス」と言います。）における、ユーザーの個人情報の取扱いについて定めるものです。
+
+1. 個人情報の収集について
+本サービスは、マルチプレイ機能を提供するためにP2P通信（PeerJS）を利用していますが、ユーザーが入力した「ニックネーム」や「予想金額」などのゲームデータは一時的なメモリ上にのみ保持され、ゲーム終了時またはブラウザを閉じた際に破棄されます。当サービスが独自にデータベースへ個人情報を永続的に保存・収集することはありません。
+
+2. アクセス解析ツールについて
+本サービスでは、Googleによるアクセス解析ツール「Google Analytics」を利用する場合があります。このGoogle Analyticsはトラフィックデータの収集のためにCookieを使用しています。このトラフィックデータは匿名で収集されており、個人を特定するものではありません。
+
+3. 広告の配信について
+本サービスは、第三者配信の広告サービス（Google AdSense）を利用しています。
+広告配信事業者は、ユーザーの興味に応じた商品やサービスの広告を表示するため、本サービスや他サイトへのアクセスに関する情報 『Cookie』(氏名、住所、メール アドレス、電話番号は含まれません) を使用することがあります。
+
+4. 楽天アフィリエイトの利用について
+本サービスは、楽天アフィリエイトプログラムに参加しています。商品リンクを通じて楽天サイトへ遷移し購入が行われた場合、運営者に紹介料が支払われる仕組みを利用しています。
+
+5. プライバシーポリシーの変更
+本サービスは、必要に応じて、本プライバシーポリシーを変更することがあります。
+`;
+
+function LegalModal({ title, content, onClose }) {
+    return (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+            <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+                <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50">
+                    <h3 className="text-xl font-black text-slate-800">{title}</h3>
+                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                        <X size={24} strokeWidth={2.5} />
+                    </button>
+                </div>
+                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
+                    <div className="whitespace-pre-wrap text-slate-600 font-medium text-sm leading-relaxed">
+                        {content}
                     </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-rose-600 flex items-center gap-2"><AlertTriangle className="w-5 h-5" />ドボンモード</h3>
-                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">正解の金額を「1円でもオーバー」するとドボンとなり0ポイント！チキンレースを楽しもう。</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-blue-600 flex items-center gap-2"><ArrowUpCircle className="w-5 h-5" />ハイ＆ロー</h3>
-                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">表示された基準価格よりも「高い」か「安い」かの2択で答えるシンプルモード！</p>
-                    </div>
-                    <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-                        <h3 className="font-bold text-amber-500 flex items-center gap-2"><Crown className="w-5 h-5" />セレブモード</h3>
-                        <p className="text-slate-500 font-medium mt-2 text-xs leading-relaxed">出題されるのが5万円以上の高額商品ばかりに！金銭感覚が狂うこと間違いなし。</p>
-                    </div>
+                </div>
+                <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+                    <button onClick={onClose} className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-md">
+                        閉じる
+                    </button>
                 </div>
             </div>
         </div>
