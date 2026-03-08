@@ -6,6 +6,33 @@ const RAKUTEN_APP_ID = '45829ef2-6927-4d66-ad32-02e9b2bf3ab6';
 const RAKUTEN_AFFILIATE_ID = '512f7071.24021527.512f7072.13b4d1f3';
 const RAKUTEN_ACCESS_KEY = 'pk_cVhHUQ7wfo6evW4nFUckq4kZQKdGbxrn1Ume4NB7YaK';
 
+// --- PeerJS Configuration (STUN & TURN for Mobile NAT Traversal) ---
+const peerOptions = {
+    debug: 2, // 通信の詳細なログ出力を有効化
+    config: {
+        iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:global.stun.twilio.com:3478' },
+            // モバイル回線同士での通信（NAT越え）をサポートする中継TURNサーバー
+            {
+                urls: "turn:openrelay.metered.ca:80",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            },
+            {
+                urls: "turn:openrelay.metered.ca:443",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            },
+            {
+                urls: "turn:openrelay.metered.ca:443?transport=tcp",
+                username: "openrelayproject",
+                credential: "openrelayproject"
+            }
+        ]
+    }
+};
+
 // --- PeerJS Loader Hook ---
 function usePeerJS() {
     const [isReady, setIsReady] = useState(false);
@@ -28,7 +55,6 @@ export default function App() {
 
     // --- SEO & AdSense Integration ---
     useEffect(() => {
-        // SEO対策: クローラー向けにmetaタグとタイトルを動的に設定
         document.title = "楽天プライスゲッサー | 友達と盛り上がる無料の値段当てゲーム";
 
         const setMeta = (name, content) => {
@@ -44,7 +70,6 @@ export default function App() {
         setMeta('description', '楽天市場の実際の商品を使って、友達と値段を予想し合う無料のパーティーゲーム「楽天プライスゲッサー」。インストール不要のブラウザゲームで、リモート飲み会や暇つぶしに最適！通常モードのほか、チキンレースやハイ＆ローなど多彩なルールで遊べます。');
         setMeta('keywords', '値段当て, 楽天, パーティーゲーム, ブラウザゲーム, 無料ゲーム, マルチプレイ, チキンレース, ハイ＆ロー');
 
-        // AdSense Script
         const script = document.createElement('script');
         script.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5871148617904389";
         script.async = true;
@@ -160,7 +185,6 @@ export default function App() {
         overflow-x: hidden;
       }
       
-      /* Animated Background Pattern Base */
       .bg-animated-pattern {
         position: fixed;
         top: 0; left: 0; right: 0; bottom: 0;
@@ -168,7 +192,6 @@ export default function App() {
         transition: background 1s ease;
       }
       
-      /* Normal Mode (Elegant Red Gradient) */
       .bg-pattern-normal {
         background: linear-gradient(135deg, #991b1b, #b91c1c, #7f1d1d);
         background-size: 200% 200%;
@@ -181,14 +204,12 @@ export default function App() {
         opacity: 0.8;
       }
       
-      /* Dobon Mode (Warning Stripes with Blur) */
       .bg-pattern-dobon {
         background: repeating-linear-gradient(-45deg, #7f1d1d, #7f1d1d 20px, #450a0a 20px, #450a0a 40px);
         animation: scrollBgDiag 2s linear infinite;
         opacity: 0.95;
       }
 
-      /* HighLow Mode (Dynamic Blue/Purple) */
       .bg-pattern-highlow {
         background: linear-gradient(135deg, #1e3a8a, #4c1d95, #312e81);
         background-size: 200% 200%;
@@ -200,7 +221,6 @@ export default function App() {
         background-size: 40px 40px;
       }
 
-      /* Celeb Mode (Luxury Black/Gold) */
       .bg-pattern-celeb {
         background: radial-gradient(circle at center, #2e1005, #000000);
       }
@@ -219,7 +239,6 @@ export default function App() {
       @keyframes scrollBgDiag { 0% { background-position: 0 0; } 100% { background-position: 56.56px 56.56px; } }
       @keyframes scrollBgSlow { 0% { background-position: 0 0; } 100% { background-position: 60px 60px; } }
       
-      /* Panels & Cards - Glassmorphism */
       .panel {
         background: rgba(255, 255, 255, 0.94);
         backdrop-filter: blur(12px);
@@ -229,7 +248,6 @@ export default function App() {
         box-shadow: 0 20px 40px -10px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.8);
       }
       
-      /* Buttons */
       .btn-solid {
         border: none;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -256,7 +274,6 @@ export default function App() {
       }
       .btn-solid:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
       
-      /* Animations */
       @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
       .animate-float { animation: float 3s ease-in-out infinite; }
       
@@ -274,7 +291,6 @@ export default function App() {
       }
       .animate-float-up { animation: float-up 2.5s ease-out forwards; }
       
-      /* Custom Scrollbar */
       .custom-scrollbar::-webkit-scrollbar { width: 10px; }
       .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 8px;}
       .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 8px; }
@@ -329,7 +345,7 @@ export default function App() {
         const newRoomId = Math.random().toString(36).substring(2, 7).toUpperCase();
         const fullPeerId = `RKTN-${newRoomId}`;
 
-        const peer = new window.Peer(fullPeerId);
+        const peer = new window.Peer(fullPeerId, peerOptions);
         peerRef.current = peer;
 
         peer.on('open', (id) => {
@@ -365,6 +381,7 @@ export default function App() {
                     }));
                 } else if (data.type === 'EMOTE') {
                     addEmoteToScreen(conn.peer, data.emoji);
+                    // ホストから他の全員へ転送
                     hostConnectionsRef.current.forEach(c => {
                         if (c.peer !== conn.peer && c.open) {
                             c.send({ type: 'EMOTE', senderId: conn.peer, emoji: data.emoji });
@@ -380,10 +397,13 @@ export default function App() {
                     return { ...prev, players: newPlayers };
                 });
             });
+            conn.on('error', (err) => {
+                console.warn('Connection error:', err);
+            });
         });
 
         peer.on('error', (err) => {
-            setError('ルームの作成に失敗しました: ' + err.message);
+            setError('通信エラーが発生しました: ' + err.type + '。通信環境を確認するか、再度お試しください。');
             setIsLoading(false);
         });
     };
@@ -396,12 +416,13 @@ export default function App() {
         const upperRoomId = roomIdInput.toUpperCase();
         const hostPeerId = `RKTN-${upperRoomId}`;
 
-        const peer = new window.Peer();
+        const peer = new window.Peer(peerOptions);
         peerRef.current = peer;
 
         peer.on('open', (id) => {
             myPeerIdRef.current = id;
-            const conn = peer.connect(hostPeerId, { reliable: true });
+            // 安定性向上のため reliable オプションを削除
+            const conn = peer.connect(hostPeerId);
             connRef.current = conn;
 
             conn.on('open', () => {
@@ -449,10 +470,18 @@ export default function App() {
                     }
                 }
             });
+
+            conn.on('error', (err) => {
+                console.warn('Connection error:', err);
+                if (isLoading) {
+                    setError('ホストが見つからないか、通信に失敗しました。');
+                    setIsLoading(false);
+                }
+            });
         });
 
         peer.on('error', (err) => {
-            setError('入室に失敗しました: ' + err.type);
+            setError('入室エラー: ' + err.type + '。ルームIDが間違っているか、通信環境が不安定です。');
             setIsLoading(false);
         });
     };
@@ -516,9 +545,9 @@ export default function App() {
 
     const getMockProducts = (rounds, gameMode) => {
         const fallbackProducts = [
-            { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。厳選された部位を丁寧にカットしてお届けします。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
-            { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。長時間のバッテリー駆動と、クリアな通話品質。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
-            { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。抹茶ロールケーキ、抹茶プリン、抹茶クッキーなど。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
+            { name: "【送料無料】最高級黒毛和牛 焼肉セット 500g", price: 5980, description: "とろけるような食感の最高級黒毛和牛。お歳暮やギフトにぴったりです。", image: "https://placehold.co/400x400/ef4444/white?text=Wagyu+1", images: ["https://placehold.co/400x400/ef4444/white?text=Wagyu+1"], url: "https://www.rakuten.co.jp/", tags: ["肉のたじまや", "送料無料"], reviewCount: 1250, reviewAverage: 4.8 },
+            { name: "【ノイズキャンセリング機能付き】ワイヤレスイヤホン", price: 12800, description: "最新のノイズキャンセリング機能を搭載した高音質イヤホン。", image: "https://placehold.co/400x400/3b82f6/white?text=Earphone+1", images: ["https://placehold.co/400x400/3b82f6/white?text=Earphone+1"], url: "https://www.rakuten.co.jp/", tags: ["家電のさくら", "ノイズキャンセリング機能付き"], reviewCount: 840, reviewAverage: 4.5 },
+            { name: "【ギフト最適】京都抹茶スイーツ詰め合わせ", price: 3240, description: "老舗茶屋が作る濃厚抹茶スイーツの贅沢セット。", image: "https://placehold.co/400x400/10b981/white?text=Matcha+1", images: ["https://placehold.co/400x400/10b981/white?text=Matcha+1"], url: "https://www.rakuten.co.jp/", tags: ["京都老舗茶屋", "ギフト最適"], reviewCount: 2310, reviewAverage: 4.9 }
         ];
 
         let items = [];
@@ -758,7 +787,7 @@ export default function App() {
         <>
             <div className={`bg-animated-pattern bg-pattern-${gameState.settings.gameMode}`}></div>
             <div className="min-h-screen p-4 md:p-8 flex flex-col items-center relative z-10">
-                <div className="w-full max-w-5xl">
+                <div className="w-full max-w-5xl relative">
                     {!currentRoomId ? (
                         <TitleScreen
                             playerName={playerName} setPlayerName={setPlayerName} roomIdInput={roomIdInput} setRoomIdInput={setRoomIdInput}
@@ -812,11 +841,13 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
     const [tab, setTab] = useState('create');
     const [showTerms, setShowTerms] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
+    const [showAbout, setShowAbout] = useState(false);
+    const [showContact, setShowContact] = useState(false);
     const [openFaq, setOpenFaq] = useState(null);
 
     return (
         <>
-            <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-24">
+            <div className="flex flex-col items-center justify-center mt-8 space-y-10 animate-fadeIn pb-24 relative z-10">
 
                 {/* Header / Title */}
                 <div className="animate-float text-center relative w-full">
@@ -995,7 +1026,11 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                 </div>
 
                 {/* Footer / Links */}
-                <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-white/80 font-bold text-sm">
+                <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-x-8 md:gap-y-4 text-white/80 font-bold text-sm max-w-4xl px-4">
+                    <button onClick={() => setShowAbout(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                        <Info size={16} /> このゲームについて
+                    </button>
+                    <span className="text-white/30 hidden md:inline">|</span>
                     <button onClick={() => setShowTerms(true)} className="hover:text-white flex items-center gap-1 transition-colors">
                         <FileText size={16} /> 利用規約
                     </button>
@@ -1004,15 +1039,23 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                         <ShieldCheck size={16} /> プライバシーポリシー
                     </button>
                     <span className="text-white/30 hidden md:inline">|</span>
-                    <a href="mailto:rakutenpriceguesser@gmail.com" className="hover:text-white flex items-center gap-1 transition-colors">
-                        <Mail size={16} /> お問い合わせ
-                    </a>
+                    <button onClick={() => setShowContact(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                        <Mail size={16} /> お問い合わせ / 運営者情報
+                    </button>
                 </footer>
+                
+                <div className="mt-8 text-white/40 text-xs font-medium text-center leading-relaxed max-w-2xl px-6">
+                    <p>© 2024 楽天プライスゲッサー 運営事務局</p>
+                    <p className="mt-1">当サイトは、楽天グループ株式会社のAPIを利用して制作された個人開発のブラウザゲームです。<br className="hidden md:block" />
+                    楽天市場の商品情報、価格等はリアルタイムで取得しておりますが、最新の情報は移動先の楽天サイトにてご確認ください。</p>
+                </div>
             </div>
 
             {/* Modals for Terms & Privacy */}
             {showTerms && <LegalModal title="利用規約" content={termsContent} onClose={() => setShowTerms(false)} />}
             {showPrivacy && <LegalModal title="プライバシーポリシー" content={privacyContent} onClose={() => setShowPrivacy(false)} />}
+            {showAbout && <LegalModal title="このゲームについて" content={aboutContent} onClose={() => setShowAbout(false)} />}
+            {showContact && <LegalModal title="お問い合わせ / 運営者情報" content={contactContent} onClose={() => setShowContact(false)} />}
         </>
     );
 }
@@ -1060,14 +1103,64 @@ const privacyContent = `
 4. 楽天アフィリエイトの利用について
 本サービスは、楽天アフィリエイトプログラムに参加しています。商品リンクを通じて楽天サイトへ遷移し購入が行われた場合、運営者に紹介料が支払われる仕組みを利用しています。
 
-5. プライバシーポリシーの変更
+5. 運営者情報について
+当サイトの運営管理およびお問い合わせへの対応は、楽天プライスゲッサー運営事務局が行っております。詳細な運営者情報は「お問い合わせ / 運営者情報」ページをご確認ください。
+
+6. プライバシーポリシーの変更
 本サービスは、必要に応じて、本プライバシーポリシーを変更することがあります。
+`;
+
+const aboutContent = `
+「楽天プライスゲッサー」は、楽天市場で実際に販売されている数千万点以上の商品データを利用した、リアルタイム対戦型の値段当てブラウザゲームです。
+
+■ 開発の背景と目的
+「この商品、いくらだと思う？」という会話は、買い物中やウィンドウスhoppingで自然に生まれる楽しいコミュニケーションです。その楽しさをオンラインで、世界中の友達と手軽に共有できるようにしたいという思いから開発されました。
+最新のWeb技術を活用し、インストール不要でPC・スマートフォンのどちらからでもすぐに遊べる設計にしています。
+
+■ 技術的な仕組み
+1. リアルタイム商品取得
+楽天グループ株式会社が提供する「楽天商品検索API」および「楽天ランキングAPI」を統合し、常に最新の商品情報、画像、価格を取得しています。
+
+2. P2Pリアルタイム通信
+サーバーを介さずブラウザ同士が直接通信するP2P技術（PeerJS）を採用しています。これにより、低遅延かつセキュアなマルチプレイ体験を実現しています。ホスト（部屋を作った人）のブラウザがゲームサーバーの役割を果たします。
+
+3. レスポンシブ・デザイン
+ReactとTailwind CSSを用いたモダンなフロントエンド構成により、どのデバイスでも最適な操作感を提供します。
+
+■ コンテンツの独自性
+単なるクイズゲームではなく、
+・「ドボンモード（チキンレース）」
+・「ハイ＆ロー（直感ゲーム）」
+・「セレブモード（高額商品限定）」
+など、金銭感覚のズレを楽しむための独自のゲーム性を追加しています。また、楽天市場の膨大なデータからランダムに出題されるため、飽きることなく何度でもお楽しみいただけます。
+
+■ 運営の透明性について
+本サービスは個人開発プロジェクトですが、利用者の方々に安心してプレイしていただけるよう、利用規約およびプライバシーポリシーを厳守し、透明性の高い運営を心がけています。
+`;
+
+const contactContent = `
+■ 運営者情報
+【運営者】 楽天プライスゲッサー運営事務局（個人開発）
+【所在地】 神奈川県（詳細が必要な場合はお問い合わせください）
+【設立】 2024年3月
+
+■ お問い合わせ先
+ゲームに関する不具合報告、機能要望、タイアップ、広告掲載に関するお問い合わせは、以下のメールアドレスまでお願いいたします。
+【メールアドレス】 rakutenpriceguesser@gmail.com
+
+※ 原則として3営業日以内に返信させていただきますが、内容によってはお時間をいただく場合や返信いたしかねる場合がございます。
+※ 楽天市場の商品自体に関するお問い合わせ（配送、商品の詳細等）は、各販売ショップ様へ直接お願いいたします。当事務局ではお答えしかねます。
+
+■ よくあるお問い合わせへの回答
+・動画配信・実況について：事前連絡不要でご自由に行っていただいて構いません。
+・リンクについて：どのページでも自由にリンクを貼っていただけます。
+・商用利用について：イベント等でのご利用も無料。大規模なプロモーションでの利用の際はご一報いただけますと幸いです。
 `;
 
 function LegalModal({ title, content, onClose }) {
     return (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all">
+            <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all relative z-10">
                 <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50">
                     <h3 className="text-xl font-black text-slate-800">{title}</h3>
                     <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
@@ -1109,7 +1202,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
     const emptySlots = Array(Math.max(0, 14 - playersEntries.length)).fill(null);
 
     return (
-        <div className="flex flex-col items-center w-full mt-4 animate-fadeIn pb-12">
+        <div className="flex flex-col items-center w-full mt-4 animate-fadeIn pb-12 relative z-10">
             {/* Header Info */}
             <div className="w-full flex flex-col md:flex-row justify-between items-center mb-6 px-2 gap-4 animate-float relative">
                 {/* LOBBY文字の背景後光エフェクト */}
@@ -1141,7 +1234,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                 </div>
             </div>
 
-            <div className="panel w-full bg-white/95 overflow-hidden flex flex-col md:flex-row md:h-[650px] p-1 gap-1">
+            <div className="panel w-full bg-white/95 overflow-hidden flex flex-col md:flex-row md:h-[650px] p-1 gap-1 relative z-10">
                 {/* Left: Players */}
                 <div className="w-full md:w-1/3 flex flex-col bg-slate-50 rounded-xl border border-slate-100 overflow-hidden h-[350px] md:h-full">
                     <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold p-4 text-center text-sm tracking-wider uppercase shadow-md relative z-10">
@@ -1249,7 +1342,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
                     </div>
 
                     {/* Footer */}
-                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 rounded-b-xl flex items-center justify-end gap-4 mt-auto">
+                    <div className="p-4 border-t border-slate-100 bg-slate-50/50 rounded-b-xl flex items-center justify-end gap-4 mt-auto relative z-10">
                         {!isHost && <div className="text-slate-600 font-bold mr-auto flex items-center gap-2 animate-pulse"><Loader2 className="animate-spin text-indigo-500 w-5 h-5" /> ホストの開始を待機中...</div>}
                         {isHost && (
                             productFetchError ? (
@@ -1279,7 +1372,7 @@ function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, start
 
 function SettingRow({ icon, title, desc, children }) {
     return (
-        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 bg-white p-4 rounded-xl border border-slate-100 hover:border-indigo-100 transition-colors relative z-10">
             <div className="flex items-center gap-4 w-full md:w-1/2">
                 <div className="bg-slate-50 p-3 rounded-xl border border-slate-100 shadow-sm shrink-0">
                     {icon}
@@ -1377,7 +1470,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
         <>
             {showDoubleAnim && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-                    <div className="bg-gradient-to-br from-amber-400 to-yellow-500 border border-white/40 rounded-3xl p-8 md:p-12 transform -rotate-3 animate-pulse-pop shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                    <div className="bg-gradient-to-br from-amber-400 to-yellow-500 border border-white/40 rounded-3xl p-8 md:p-12 transform -rotate-3 animate-pulse-pop shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative z-10">
                         <h2 className="text-4xl md:text-5xl font-black text-rose-700 text-center drop-shadow-md leading-tight">
                             最終ラウンド！<br />
                             <span className="text-6xl md:text-8xl text-white block mt-4 transform rotate-2 drop-shadow-xl">
@@ -1387,7 +1480,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                     </div>
                 </div>
             )}
-            <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24">
+            <div className="w-full mt-4 flex flex-col items-center animate-fadeIn relative pb-24 z-10">
 
                 {/* Header */}
                 <div className="w-full flex flex-wrap justify-between items-center mb-6 px-2 gap-4 animate-float">
@@ -1405,7 +1498,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
                     </div>
                 </div>
 
-                <div className="panel w-full p-4 md:p-6 flex flex-col gap-6">
+                <div className="panel w-full p-4 md:p-6 flex flex-col gap-6 relative z-10">
                     {/* Image & Title Container */}
                     <div className="flex flex-col md:flex-row gap-6 bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
                         {/* Images */}
@@ -1506,7 +1599,7 @@ function GameScreen({ gameState, myPeerId, submitGuess, handleLeaveRoom, sendLiv
 
                     {/* Live Guess Area */}
                     {gameState.settings.showLiveGuess && !isHighLow && (
-                        <div className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mt-2 animate-fadeIn">
+                        <div className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm mt-2 animate-fadeIn relative z-10">
                             <h4 className="font-bold text-slate-700 mb-4 flex items-center gap-2 text-sm uppercase tracking-wider"><Users size={18} className="text-indigo-500" /> みんなの入力状況</h4>
                             <div className="flex flex-wrap gap-3">
                                 {Object.entries(gameState.players).map(([id, p]) => (
@@ -1536,7 +1629,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
     const isHighLow = gameState.settings.gameMode === 'highlow';
 
     return (
-        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative pb-24">
+        <div className="mt-8 flex flex-col items-center w-full animate-fadeIn relative pb-24 z-10">
             <div className="w-full flex justify-end px-2 mb-4 md:-mb-8 z-20">
                 <LeaveButton onLeave={handleLeaveRoom} />
             </div>
@@ -1551,7 +1644,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                 </h2>
             </div>
 
-            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4 overflow-hidden">
+            <div className="panel w-full max-w-2xl bg-white p-8 flex flex-col items-center relative text-center pt-12 mt-4 overflow-hidden z-10">
                 <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-indigo-500 via-purple-500 to-rose-500"></div>
 
                 {isHighLow && (
@@ -1569,7 +1662,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                 </div>
             </div>
 
-            <div className="w-full max-w-2xl space-y-4 mt-8">
+            <div className="w-full max-w-2xl space-y-4 mt-8 z-10">
                 {sortedPlayers.map(([id, p], index) => {
                     let guessDisplay = '時間切れ';
                     let diffDisplay = null;
@@ -1608,7 +1701,7 @@ function RoundEndScreen({ gameState, myPeerId, handleLeaveRoom }) {
                     );
                 })}
             </div>
-            <p className="mt-12 font-bold text-white/80 text-xl animate-pulse tracking-widest">次のラウンドへ進みます...</p>
+            <p className="mt-12 font-bold text-white/80 text-xl animate-pulse tracking-widest relative z-10">次のラウンドへ進みます...</p>
         </div>
     );
 }
@@ -1624,14 +1717,14 @@ function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDis
     ];
 
     return (
-        <div className="mt-8 flex flex-col items-center pb-32 animate-fadeIn">
+        <div className="mt-8 flex flex-col items-center pb-32 animate-fadeIn relative z-10">
             <div className="animate-float z-10 -mb-8">
                 <h2 className="text-6xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-200 to-yellow-500 drop-shadow-[0_4px_12px_rgba(0,0,0,0.5)] mb-8 flex items-center gap-4 transform -rotate-2">
                     <Trophy className="w-16 h-16 md:w-20 md:h-20 text-yellow-400 drop-shadow-lg" /> 最終結果
                 </h2>
             </div>
 
-            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white/95 panel p-6 md:p-10 pt-16 mt-4 border-none">
+            <div className="w-full max-w-3xl flex flex-col gap-4 mb-12 bg-white/95 panel p-6 md:p-10 pt-16 mt-4 border-none z-10">
                 {sortedPlayers.map(([id, p], index) => (
                     <div key={id} className={`flex items-center gap-6 bg-white rounded-2xl p-5 md:p-6 transition-all ${index === 0 ? 'shadow-xl border border-yellow-200 transform scale-[1.03] z-10 animate-pulse-pop bg-gradient-to-r from-yellow-50/50 to-white' : 'shadow-sm border border-slate-100'}`}>
                         <div className={`w-14 h-14 md:w-16 md:h-16 flex items-center justify-center rounded-full font-black text-2xl md:text-3xl ${rankColors[index] || rankColors[3]}`}>
@@ -1646,7 +1739,7 @@ function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDis
                 ))}
             </div>
 
-            <div className="panel w-full max-w-3xl bg-slate-50/95 p-6 md:p-8 border-none">
+            <div className="panel w-full max-w-3xl bg-slate-50/95 p-6 md:p-8 border-none z-10">
                 <h3 className="text-xl font-black text-slate-800 mb-6 text-center border-b border-slate-200 pb-4">登場した商品</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     {gameState.products.map((prod, i) => (
@@ -1679,7 +1772,7 @@ function ResultScreen({ gameState, handleLeaveRoom, handleReturnToLobby, hostDis
             </div>
 
             {/* ナビゲーションボタン群 */}
-            <div className="mt-12 flex flex-col items-center gap-6 w-full">
+            <div className="mt-12 flex flex-col items-center gap-6 w-full z-10 relative">
                 <div className="flex flex-col md:flex-row gap-4 justify-center w-full max-w-2xl px-4">
                     {!hostDisconnected && (
                         <button
