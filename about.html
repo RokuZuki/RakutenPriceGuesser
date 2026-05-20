@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5871148617904389" crossorigin="anonymous"></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>このゲームについて | 楽天プライスゲッサー</title>
+    <meta name="description" content="楽天市場の商品価格を友達と当てるP2P対戦型ブラウザゲーム「楽天プライスゲッサー」の紹介、ゲームモード（通常・ドボン・ハイ＆ロー・セレブ）のルール説明、技術的な仕組み（楽天API、PeerJS）について解説します。" />
+    <link rel="stylesheet" href="/src/index.css" />
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap');
+      body {
+        font-family: 'Noto Sans JP', sans-serif;
+        color: #1e293b;
+        background: linear-gradient(135deg, #991b1b, #b91c1c, #7f1d1d);
+        background-size: 200% 200%;
+        background-attachment: fixed;
+      }
+      body::before {
+        content: ""; position: fixed; inset: 0;
+        background-image: radial-gradient(rgba(255,255,255,0.15) 1px, transparent 1px);
+        background-size: 30px 30px;
+        opacity: 0.8;
+        z-index: -1;
+      }
+      .panel {
+        background: rgba(255, 255, 255, 0.96);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.6);
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px -10px rgba(0,0,0,0.3);
+      }
+    </style>
+  </head>
+  <body class="min-h-screen p-4 md:p-8 flex flex-col items-center">
+    <div class="w-full max-w-4xl flex flex-col mt-4 md:mt-8 pb-24">
+      
+      <!-- Header / Logo Area -->
+      <header class="text-center mb-10">
+        <a href="/" class="inline-block hover:scale-105 transition-transform duration-300">
+          <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-yellow-300 to-amber-500 tracking-tight" style="filter: drop-shadow(0px 4px 8px rgba(0,0,0,0.5))">
+            楽天プライスゲッサー
+          </h1>
+        </a>
+        <p class="text-white/80 font-bold text-sm tracking-widest mt-2">このゲームについて / 遊び方</p>
+      </header>
+
+      <!-- Main Panel -->
+      <main class="panel p-6 md:p-10 space-y-8">
+        
+        <!-- About Section -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-black text-slate-800 border-b-2 border-rose-500 pb-2 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            楽天プライスゲッサーとは？
+          </h2>
+          <p class="text-slate-600 leading-relaxed font-medium">
+            「楽天プライスゲッサー」は、楽天市場で実際に販売されている数千万点以上の商品データを利用し、友達同士でリアルタイムに値段を予想し合う対戦型ブラウザゲームです。
+          </p>
+          <p class="text-slate-600 leading-relaxed font-medium">
+            「この商品、いくらだと思う？」という日常の何気ない楽しさを、オンラインかつインストール不要で、PCやスマートフォンのどちらからでもすぐに体験できるように設計されています。リモート飲み会、合コン、ちょっとした暇つぶしに最適なパーティーゲームです。
+          </p>
+        </section>
+
+        <!-- Features / Modes Section -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-black text-slate-800 border-b-2 border-rose-500 pb-2 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            選べる4つのゲームモード
+          </h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 shadow-sm">
+              <h3 class="font-bold text-emerald-700 flex items-center gap-2 text-lg">通常モード</h3>
+              <p class="text-slate-600 font-medium mt-2 text-sm leading-relaxed">
+                正解の金額に一番近い予想をしたプレイヤーが高得点をもらえるスタンダードなルールです。誤差が少ないほどスコアが高くなります。
+              </p>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 shadow-sm">
+              <h3 class="font-bold text-rose-700 flex items-center gap-2 text-lg">ドボンモード</h3>
+              <p class="text-slate-600 font-medium mt-2 text-sm leading-relaxed">
+                正解の金額を「1円でもオーバー」するとドボン（即0点）となるチキンレース型ルールです。安全に行くか、ギリギリを攻めるかの心理戦が楽しめます。
+              </p>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 shadow-sm">
+              <h3 class="font-bold text-blue-700 flex items-center gap-2 text-lg">ハイ＆ロー</h3>
+              <p class="text-slate-600 font-medium mt-2 text-sm leading-relaxed">
+                提示された基準の価格よりも、実際の商品価格が「高い（High）」か「安い（Low）」かを2択で当てるカジュアルなルールです。初心者でもサクサク遊べます。
+              </p>
+            </div>
+            <div class="bg-slate-50 p-5 rounded-xl border border-slate-100 shadow-sm">
+              <h3 class="font-bold text-amber-700 flex items-center gap-2 text-lg">セレブモード</h3>
+              <p class="text-slate-600 font-medium mt-2 text-sm leading-relaxed">
+                出題される商品が「5万円以上の高額商品」に限定される極端なモードです。高級時計やブランド牛など、金銭感覚が狂うスリルを楽しめます。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Tech Architecture Section -->
+        <section class="space-y-4">
+          <h2 class="text-2xl font-black text-slate-800 border-b-2 border-rose-500 pb-2 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-rose-500"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            技術的な仕組み
+          </h2>
+          <div class="space-y-4 text-slate-600 leading-relaxed font-medium text-sm">
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">1. 楽天市場APIによるリアルタイム連携</h3>
+              <p class="mt-1">
+                本サービスは、楽天グループ株式会社が提供する「楽天商品検索API」および「楽天ランキングAPI」を統合し、最新の商品情報（画像、タイトル、説明文、レビュー、実際の販売価格）をリアルタイムに取得して出題しています。
+              </p>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">2. P2P (Peer-to-Peer) 通信によるマルチプレイ</h3>
+              <p class="mt-1">
+                対戦時のリアルタイム通信には「PeerJS（WebRTC）」を採用しています。これにより、中央サーバーを経由することなくプレイヤー同士のブラウザ間で直接データを同期するため、超低遅延で快適なマルチプレイが実現します。
+              </p>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-base">3. セキュリティとプライバシーの配慮</h3>
+              <p class="mt-1">
+                P2P通信によってゲームデータがプレイヤー間でやり取りされるため、当サイトのサーバーに「誰が参加したか」「何を予想したか」といったゲーム履歴や個人情報が保存されることはありません。安心して遊んでいただける透明性の高い設計となっています。
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- CTA back to top -->
+        <div class="flex justify-center pt-4 border-t border-slate-100">
+          <a href="/" class="bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-white font-bold py-3.5 px-10 rounded-xl text-lg shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            トップページに戻って遊ぶ
+          </a>
+        </div>
+
+      </main>
+
+      <!-- Footer / Links -->
+      <footer class="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-white/80 font-bold text-sm px-4">
+        <a href="/about.html" class="hover:text-white flex items-center gap-1 transition-colors">このゲームについて</a>
+        <span class="text-white/30">|</span>
+        <a href="/terms.html" class="hover:text-white flex items-center gap-1 transition-colors">利用規約</a>
+        <span class="text-white/30">|</span>
+        <a href="/privacy.html" class="hover:text-white flex items-center gap-1 transition-colors">プライバシーポリシー</a>
+        <span class="text-white/30">|</span>
+        <a href="/contact.html" class="hover:text-white flex items-center gap-1 transition-colors">お問い合わせ / 運営者情報</a>
+      </footer>
+
+      <div class="mt-8 text-white/40 text-xs font-medium text-center">
+        <p>© 2024 楽天プライスゲッサー 運営事務局</p>
+      </div>
+
+    </div>
+  </body>
+</html>

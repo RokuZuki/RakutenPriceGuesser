@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Trophy, Users, User, Settings, Clock, Play, Link as LinkIcon, Crown, CheckCircle2, AlertCircle, Home, ShoppingCart, Loader2, Copy, Check, Star, X, LogOut, RefreshCw, AlertTriangle, Info, MessageCircle, ArrowUpCircle, ArrowDownCircle, FileText, ShieldCheck, ChevronDown, ChevronUp, Mail } from 'lucide-react';
 
 // --- Rakuten API Constants ---
@@ -839,10 +839,6 @@ export default function App() {
 
 function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, handleCreateRoom, handleJoinRoom, error, isLoading }) {
     const [tab, setTab] = useState('create');
-    const [showTerms, setShowTerms] = useState(false);
-    const [showPrivacy, setShowPrivacy] = useState(false);
-    const [showAbout, setShowAbout] = useState(false);
-    const [showContact, setShowContact] = useState(false);
     const [openFaq, setOpenFaq] = useState(null);
 
     return (
@@ -1026,22 +1022,22 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                 </div>
 
                 {/* Footer / Links */}
-                <footer className="mt-12 flex flex-wrap items-center justify-center gap-4 md:gap-x-8 md:gap-y-4 text-white/80 font-bold text-sm max-w-4xl px-4">
-                    <button onClick={() => setShowAbout(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                <footer className="mt-12 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-white/80 font-bold text-sm px-4">
+                    <a href="/about.html" className="hover:text-white flex items-center gap-1 transition-colors">
                         <Info size={16} /> このゲームについて
-                    </button>
-                    <span className="text-white/30 hidden md:inline">|</span>
-                    <button onClick={() => setShowTerms(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                    </a>
+                    <span className="text-white/30">|</span>
+                    <a href="/terms.html" className="hover:text-white flex items-center gap-1 transition-colors">
                         <FileText size={16} /> 利用規約
-                    </button>
-                    <span className="text-white/30 hidden md:inline">|</span>
-                    <button onClick={() => setShowPrivacy(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                    </a>
+                    <span className="text-white/30">|</span>
+                    <a href="/privacy.html" className="hover:text-white flex items-center gap-1 transition-colors">
                         <ShieldCheck size={16} /> プライバシーポリシー
-                    </button>
-                    <span className="text-white/30 hidden md:inline">|</span>
-                    <button onClick={() => setShowContact(true)} className="hover:text-white flex items-center gap-1 transition-colors">
+                    </a>
+                    <span className="text-white/30">|</span>
+                    <a href="/contact.html" className="hover:text-white flex items-center gap-1 transition-colors">
                         <Mail size={16} /> お問い合わせ / 運営者情報
-                    </button>
+                    </a>
                 </footer>
                 
                 <div className="mt-8 text-white/40 text-xs font-medium text-center leading-relaxed max-w-2xl px-6">
@@ -1051,136 +1047,12 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                 </div>
             </div>
 
-            {/* Modals for Terms & Privacy */}
-            {showTerms && <LegalModal title="利用規約" content={termsContent} onClose={() => setShowTerms(false)} />}
-            {showPrivacy && <LegalModal title="プライバシーポリシー" content={privacyContent} onClose={() => setShowPrivacy(false)} />}
-            {showAbout && <LegalModal title="このゲームについて" content={aboutContent} onClose={() => setShowAbout(false)} />}
-            {showContact && <LegalModal title="お問い合わせ / 運営者情報" content={contactContent} onClose={() => setShowContact(false)} />}
+
         </>
     );
 }
 
-// 規約コンテンツデータ
-const termsContent = `
-本利用規約（以下、「本規約」と言います。）は、「楽天プライスゲッサー」（以下、「本サービス」と言います。）の提供条件及び、利用者の皆様との間の権利義務関係を定めるものです。
 
-第1条（適用）
-本規約は、本サービスの利用に関する一切の関係に適用されます。本サービスをご利用になる場合は、本規約に同意したものとみなされます。
-
-第2条（本サービスの内容と免責事項）
-1. 本サービスは、楽天グループ株式会社が提供するAPIを利用し、商品情報を取得・表示して価格を予想するエンターテインメント目的のゲームです。
-2. 表示される商品価格、レビュー情報、商品画像等は取得時点のものであり、常に最新または正確であることを保証するものではありません。
-3. 運営者は、本サービスに起因して利用者に生じたあらゆる損害について一切の責任を負いません。
-
-第3条（禁止事項）
-利用者は、本サービスの利用にあたり、以下の行為をしてはなりません。
-1. 法令または公序良俗に違反する行為
-2. 犯罪行為に関連する行為
-3. 本サービスのサーバーやネットワークの機能を破壊したり、妨害したりする行為
-4. 他の利用者に関する個人情報等を収集または蓄積する行為
-5. その他、運営者が不適切と判断する行為
-
-第4条（サービス内容の変更等）
-運営者は、利用者に通知することなく、本サービスの内容を変更しまたは本サービスの提供を中止することができるものとします。
-
-第5条（準拠法・裁判管轄）
-本規約の解釈にあたっては、日本法を準拠法とします。本サービスに関して紛争が生じた場合には、運営者の所在地を管轄する裁判所を専属的合意管轄とします。
-`;
-
-const privacyContent = `
-本プライバシーポリシーは、「楽天プライスゲッサー」（以下、「本サービス」と言います。）における、ユーザーの個人情報の取扱いについて定めるものです。
-
-1. 個人情報の収集について
-本サービスは、マルチプレイ機能を提供するためにP2P通信（PeerJS）を利用していますが、ユーザーが入力した「ニックネーム」や「予想金額」などのゲームデータは一時的なメモリ上にのみ保持され、ゲーム終了時またはブラウザを閉じた際に破棄されます。当サービスが独自にデータベースへ個人情報を永続的に保存・収集することはありません。
-
-2. アクセス解析ツールについて
-本サービスでは、Googleによるアクセス解析ツール「Google Analytics」を利用する場合があります。このGoogle Analyticsはトラフィックデータの収集のためにCookieを使用しています。このトラフィックデータは匿名で収集されており、個人を特定するものではありません。
-
-3. 広告の配信について
-本サービスは、第三者配信の広告サービス（Google AdSense）を利用しています。
-広告配信事業者は、ユーザーの興味に応じた商品やサービスの広告を表示するため、本サービスや他サイトへのアクセスに関する情報 『Cookie』(氏名、住所、メール アドレス、電話番号は含まれません) を使用することがあります。
-
-4. 楽天アフィリエイトの利用について
-本サービスは、楽天アフィリエイトプログラムに参加しています。商品リンクを通じて楽天サイトへ遷移し購入が行われた場合、運営者に紹介料が支払われる仕組みを利用しています。
-
-5. 運営者情報について
-当サイトの運営管理およびお問い合わせへの対応は、楽天プライスゲッサー運営事務局が行っております。詳細な運営者情報は「お問い合わせ / 運営者情報」ページをご確認ください。
-
-6. プライバシーポリシーの変更
-本サービスは、必要に応じて、本プライバシーポリシーを変更することがあります。
-`;
-
-const aboutContent = `
-「楽天プライスゲッサー」は、楽天市場で実際に販売されている数千万点以上の商品データを利用した、リアルタイム対戦型の値段当てブラウザゲームです。
-
-■ 開発の背景と目的
-「この商品、いくらだと思う？」という会話は、買い物中やウィンドウスhoppingで自然に生まれる楽しいコミュニケーションです。その楽しさをオンラインで、世界中の友達と手軽に共有できるようにしたいという思いから開発されました。
-最新のWeb技術を活用し、インストール不要でPC・スマートフォンのどちらからでもすぐに遊べる設計にしています。
-
-■ 技術的な仕組み
-1. リアルタイム商品取得
-楽天グループ株式会社が提供する「楽天商品検索API」および「楽天ランキングAPI」を統合し、常に最新の商品情報、画像、価格を取得しています。
-
-2. P2Pリアルタイム通信
-サーバーを介さずブラウザ同士が直接通信するP2P技術（PeerJS）を採用しています。これにより、低遅延かつセキュアなマルチプレイ体験を実現しています。ホスト（部屋を作った人）のブラウザがゲームサーバーの役割を果たします。
-
-3. レスポンシブ・デザイン
-ReactとTailwind CSSを用いたモダンなフロントエンド構成により、どのデバイスでも最適な操作感を提供します。
-
-■ コンテンツの独自性
-単なるクイズゲームではなく、
-・「ドボンモード（チキンレース）」
-・「ハイ＆ロー（直感ゲーム）」
-・「セレブモード（高額商品限定）」
-など、金銭感覚のズレを楽しむための独自のゲーム性を追加しています。また、楽天市場の膨大なデータからランダムに出題されるため、飽きることなく何度でもお楽しみいただけます。
-
-■ 運営の透明性について
-本サービスは個人開発プロジェクトですが、利用者の方々に安心してプレイしていただけるよう、利用規約およびプライバシーポリシーを厳守し、透明性の高い運営を心がけています。
-`;
-
-const contactContent = `
-■ 運営者情報
-【運営者】 楽天プライスゲッサー運営事務局（個人開発）
-【所在地】 神奈川県（詳細が必要な場合はお問い合わせください）
-【設立】 2024年3月
-
-■ お問い合わせ先
-ゲームに関する不具合報告、機能要望、タイアップ、広告掲載に関するお問い合わせは、以下のメールアドレスまでお願いいたします。
-【メールアドレス】 rakutenpriceguesser@gmail.com
-
-※ 原則として3営業日以内に返信させていただきますが、内容によってはお時間をいただく場合や返信いたしかねる場合がございます。
-※ 楽天市場の商品自体に関するお問い合わせ（配送、商品の詳細等）は、各販売ショップ様へ直接お願いいたします。当事務局ではお答えしかねます。
-
-■ よくあるお問い合わせへの回答
-・動画配信・実況について：事前連絡不要でご自由に行っていただいて構いません。
-・リンクについて：どのページでも自由にリンクを貼っていただけます。
-・商用利用について：イベント等でのご利用も無料。大規模なプロモーションでの利用の際はご一報いただけますと幸いです。
-`;
-
-function LegalModal({ title, content, onClose }) {
-    return (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
-            <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[85vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden transform transition-all relative z-10">
-                <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-slate-50">
-                    <h3 className="text-xl font-black text-slate-800">{title}</h3>
-                    <button onClick={onClose} className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
-                        <X size={24} strokeWidth={2.5} />
-                    </button>
-                </div>
-                <div className="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
-                    <div className="whitespace-pre-wrap text-slate-600 font-medium text-sm leading-relaxed">
-                        {content}
-                    </div>
-                </div>
-                <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
-                    <button onClick={onClose} className="bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-8 rounded-xl transition-colors shadow-md">
-                        閉じる
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-}
 
 function LobbyScreen({ gameState, isHost, roomId, myPeerId, updateSetting, startGame, isLoading, handleKickPlayer, handleLeaveRoom, productFetchError }) {
     const [copied, setCopied] = useState(false);
