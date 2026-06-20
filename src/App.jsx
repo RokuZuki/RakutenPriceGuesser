@@ -1039,6 +1039,14 @@ function TitleScreen({ playerName, setPlayerName, roomIdInput, setRoomIdInput, h
                         <Mail size={16} /> お問い合わせ / 運営者情報
                     </a>
                 </footer>
+
+                {/* Columns Index Link (Footer) */}
+                <div className="mt-6 text-center text-white/60 text-xs font-bold space-x-2">
+                    <span>【お役立ちコラム】</span>
+                    <a href="/column-party-tips.html" className="underline hover:text-white">ゲームを盛り上げるコツ</a> |
+                    <a href="/column-rakuten-tips.html" className="underline hover:text-white">楽天市場お得攻略ガイド</a> |
+                    <a href="/column-p2p-tech.html" className="underline hover:text-white">P2P通信の安全性と仕組み</a>
+                </div>
                 
                 <div className="mt-8 text-white/40 text-xs font-medium text-center leading-relaxed max-w-2xl px-6">
                     <p>© 2024 楽天プライスゲッサー 運営事務局</p>
